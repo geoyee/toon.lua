@@ -29,6 +29,7 @@ print(str)
 ```
 
 Output:
+
 ```toon
 name: Alice
 age: 30
@@ -61,6 +62,7 @@ print(data.contact.email) -- bob@example.com
 Encode a Lua value to TOON string.
 
 Options:
+
 - `indent` (number): spaces per indent level (default: 2)
 - `delimiter` (string): array delimiter - `","`, `"|"`, `"\t"` (default: ",")
 
@@ -69,16 +71,19 @@ Options:
 Decode a TOON string to Lua table.
 
 Options:
+
 - `strict` (boolean): strict parsing mode (default: false)
 
 ## Array Formats
 
 **Inline arrays:**
+
 ```lua
 toon.encode({tags = {"a", "b"}})  -- tags[2]: a,b
 ```
 
 **Tabular arrays:**
+
 ```lua
 toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
 -- users[2]{id,name}:

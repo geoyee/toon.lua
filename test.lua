@@ -1,53 +1,18 @@
+-- test.lua - Test suite for toon.lua
+
 local toon = require("toon")
 
-local function deepCompare(a, b, path)
-    path = path or ""
-    local typeA, typeB = type(a), type(b)
-    
-    if typeA ~= typeB then
-        return false, path .. ": type mismatch (" .. typeA .. " vs " .. typeB .. ")"
-    end
-    
-    if typeA == "table" then
-        local keysA, keysB = {}, {}
-        for k in pairs(a) do table.insert(keysA, k) end
-        for k in pairs(b) do table.insert(keysB, k) end
-        table.sort(keysA)
-        table.sort(keysB)
-        
-        if #keysA ~= #keysB then
-            return false, path .. ": table key count mismatch"
-        end
-        
-        for _, k in ipairs(keysA) do
-            local subPath = path .. (path ~= "" and "." or "") .. tostring(k)
-            local ok, err = deepCompare(a[k], b[k], subPath)
-            if not ok then return false, err end
-        end
-        return true
-    end
-    
-    if a ~= b then
-        return false, path .. ": value mismatch (" .. tostring(a) .. " vs " .. tostring(b) .. ")"
-    end
-    
-    return true
-end
-
-local totalPassed = 0
-local totalFailed = 0
+local passed, failed = 0, 0
 
 local function test(name, fn)
-    local success, err = pcall(fn)
-    if success then
+    local ok, err = pcall(fn)
+    if ok then
         io.write("✓")
-        totalPassed = totalPassed + 1
-        return true
+        passed = passed + 1
     else
         io.write("✗")
         io.write(" [ERROR: " .. tostring(err) .. "]")
-        totalFailed = totalFailed + 1
-        return false
+        failed = failed + 1
     end
 end
 
@@ -59,615 +24,483 @@ end
 
 section("Primitive Types")
 
-totalPassed = totalPassed + (test("String encoding", function()
-    local result = toon.encode({test = "hello"})
-    assert(result == 'test: hello', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String encoding", function()
+    assert(toon.encode({test = "hello"}) == "test: hello")
+end)
 
-totalPassed = totalPassed + (test("Number encoding", function()
-    local result = toon.encode({num = 42})
-    assert(result == 'num: 42', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Number encoding", function()
+    assert(toon.encode({num = 42}) == "num: 42")
+end)
 
-totalPassed = totalPassed + (test("Boolean true encoding", function()
-    local result = toon.encode({val = true})
-    assert(result == 'val: true', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Boolean true encoding", function()
+    assert(toon.encode({val = true}) == "val: true")
+end)
 
-totalPassed = totalPassed + (test("Boolean false encoding", function()
-    local result = toon.encode({val = false})
-    assert(result:find('val: false'), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Boolean false encoding", function()
+    assert(toon.encode({val = false}):find("val: false"))
+end)
 
-totalPassed = totalPassed + (test("Null value handling", function()
-    local decoded = toon.decode("val: null")
-    assert(next(decoded) == nil, "nil value should result in empty table in Lua")
-end) and 1 or 0)
+test("Null value handling", function()
+    local r = toon.decode("val: null")
+    assert(next(r) == nil)
+end)
 
-totalPassed = totalPassed + (test("String decoding", function()
-    local result, err = toon.decode("value: hello world")
-    assert(result.value == "hello world", "got: " .. tostring(result and result.value))
-end) and 1 or 0)
+test("String decoding", function()
+    local r = toon.decode("value: hello world")
+    assert(r.value == "hello world")
+end)
 
-totalPassed = totalPassed + (test("Number decoding", function()
-    local result, err = toon.decode("num: 42")
-    assert(result.num == 42, "got: " .. tostring(result and result.num))
-end) and 1 or 0)
+test("Number decoding", function()
+    local r = toon.decode("num: 42")
+    assert(r.num == 42)
+end)
 
-totalPassed = totalPassed + (test("Boolean true decoding", function()
-    local result, err = toon.decode("flag: true")
-    assert(result.flag == true, "got: " .. tostring(result and result.flag))
-end) and 1 or 0)
+test("Boolean true decoding", function()
+    local r = toon.decode("flag: true")
+    assert(r.flag == true)
+end)
 
-totalPassed = totalPassed + (test("Boolean false decoding", function()
-    local result, err = toon.decode("flag: false")
-    assert(result.flag == false, "got: " .. tostring(result and result.flag))
-end) and 1 or 0)
+test("Boolean false decoding", function()
+    local r = toon.decode("flag: false")
+    assert(r.flag == false)
+end)
 
-totalPassed = totalPassed + (test("Null detection", function()
-    local result, err = toon.decode("val: null")
-    assert(result ~= nil, "result should not be nil")
-    assert(next(result) == nil, "table should be empty (nil removed in Lua)")
-end) and 1 or 0)
+test("Null detection", function()
+    local r = toon.decode("val: null")
+    assert(r ~= nil and next(r) == nil)
+end)
 
 section("String Quoting and Escaping")
 
-totalPassed = totalPassed + (test("Empty string quoting", function()
-    local result = toon.encode({empty = ""})
-    assert(result == 'empty: ""', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Empty string quoting", function()
+    assert(toon.encode({empty = ""}) == 'empty: ""')
+end)
 
-totalPassed = totalPassed + (test("String with leading/trailing whitespace", function()
-    local result = toon.encode({ws = "  hello  "})
-    assert(result == 'ws: "  hello  "', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with leading/trailing whitespace", function()
+    assert(toon.encode({ws = "  hello  "}) == 'ws: "  hello  "')
+end)
 
-totalPassed = totalPassed + (test("String matching 'true' quoted", function()
-    local result = toon.encode({val = "true"})
-    assert(result == 'val: "true"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String matching 'true' quoted", function()
+    assert(toon.encode({val = "true"}) == 'val: "true"')
+end)
 
-totalPassed = totalPassed + (test("String matching 'false' quoted", function()
-    local result = toon.encode({val = "false"})
-    assert(result == 'val: "false"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String matching 'false' quoted", function()
+    assert(toon.encode({val = "false"}) == 'val: "false"')
+end)
 
-totalPassed = totalPassed + (test("String matching 'null' quoted", function()
-    local result = toon.encode({val = "null"})
-    assert(result == 'val: "null"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String matching 'null' quoted", function()
+    assert(toon.encode({val = "null"}) == 'val: "null"')
+end)
 
-totalPassed = totalPassed + (test("Numeric string quoted", function()
-    local result = toon.encode({val = "42"})
-    assert(result == 'val: "42"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Numeric string quoted", function()
+    assert(toon.encode({val = "42"}) == 'val: "42"')
+end)
 
-totalPassed = totalPassed + (test("String with colon quoted", function()
-    local result = toon.encode({url = "http://example.com"})
-    assert(result == 'url: "http://example.com"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with colon quoted", function()
+    assert(toon.encode({url = "http://example.com"}) == 'url: "http://example.com"')
+end)
 
-totalPassed = totalPassed + (test("String with quotes escaped", function()
-    local result = toon.encode({quoted = 'say "hello"'})
-    assert(result == 'quoted: "say \\"hello\\""', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with quotes escaped", function()
+    assert(toon.encode({quoted = 'say "hello"'}) == 'quoted: "say \\"hello\\""')
+end)
 
-totalPassed = totalPassed + (test("String with backslash escaped", function()
-    local result = toon.encode({path = "C:\\Users"})
-    assert(result == 'path: "C:\\\\Users"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with backslash escaped", function()
+    assert(toon.encode({path = "C:\\Users"}) == 'path: "C:\\\\Users"')
+end)
 
-totalPassed = totalPassed + (test("String with newline escaped", function()
-    local result = toon.encode({multiline = "line1\nline2"})
-    assert(result == 'multiline: "line1\\nline2"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with newline escaped", function()
+    assert(toon.encode({multiline = "line1\nline2"}) == 'multiline: "line1\\nline2"')
+end)
 
-totalPassed = totalPassed + (test("String with tab escaped", function()
-    local result = toon.encode({tabbed = "a\tb"})
-    assert(result == 'tabbed: "a\\tb"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with tab escaped", function()
+    assert(toon.encode({tabbed = "a\tb"}) == 'tabbed: "a\\tb"')
+end)
 
-totalPassed = totalPassed + (test("String starting with hyphen quoted", function()
-    local result = toon.encode({dash = "-start"})
-    assert(result == 'dash: "-start"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String starting with hyphen quoted", function()
+    assert(toon.encode({dash = "-start"}) == 'dash: "-start"')
+end)
 
-totalPassed = totalPassed + (test("String with brackets quoted", function()
-    local result = toon.encode({arr = "[1,2,3]"})
-    assert(result == 'arr: "[1,2,3]"', "got: " .. tostring(result))
-end) and 1 or 0)
+test("String with brackets quoted", function()
+    assert(toon.encode({arr = "[1,2,3]"}) == 'arr: "[1,2,3]"')
+end)
 
-totalPassed = totalPassed + (test("Unescape string", function()
-    local result, err = toon.decode('str: "hello\\nworld"')
-    assert(result.str == "hello\nworld", "got: " .. tostring(result and result.str))
-end) and 1 or 0)
+test("Unescape string", function()
+    local r = toon.decode('str: "hello\\nworld"')
+    assert(r.str == "hello\nworld")
+end)
 
 section("Number Formatting")
 
-totalPassed = totalPassed + (test("Integer formatting", function()
-    local result = toon.encode({num = 42})
-    assert(result == 'num: 42', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Integer formatting", function()
+    assert(toon.encode({num = 42}) == "num: 42")
+end)
 
-totalPassed = totalPassed + (test("Float without trailing zeros", function()
-    local result = toon.encode({num = 1.5})
-    assert(result == 'num: 1.5', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Float without trailing zeros", function()
+    assert(toon.encode({num = 1.5}) == "num: 1.5")
+end)
 
-totalPassed = totalPassed + (test("Float with trailing zeros normalized", function()
-    local result = toon.encode({num = 1.50})
-    assert(result == 'num: 1.5', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Float with trailing zeros normalized", function()
+    assert(toon.encode({num = 1.50}) == "num: 1.5")
+end)
 
-totalPassed = totalPassed + (test("Integer float normalized", function()
-    local result = toon.encode({num = 1.0})
-    assert(result == 'num: 1', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Integer float normalized", function()
+    assert(toon.encode({num = 1.0}) == "num: 1")
+end)
 
-totalPassed = totalPassed + (test("Negative zero normalized", function()
-    local result = toon.encode({negzero = -0})
-    assert(result == 'negzero: 0', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Negative zero normalized", function()
+    assert(toon.encode({negzero = -0}) == "negzero: 0")
+end)
 
-totalPassed = totalPassed + (test("NaN encoded as null", function()
-    local result = toon.encode({nan = 0/0})
-    assert(result == 'nan: null', "got: " .. tostring(result))
-end) and 1 or 0)
+test("NaN encoded as null", function()
+    assert(toon.encode({nan = 0/0}) == "nan: null")
+end)
 
-totalPassed = totalPassed + (test("Infinity encoded as null", function()
-    local result = toon.encode({inf = math.huge})
-    assert(result == 'inf: null', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Infinity encoded as null", function()
+    assert(toon.encode({inf = math.huge}) == "inf: null")
+end)
 
-totalPassed = totalPassed + (test("Negative infinity encoded as null", function()
-    local result = toon.encode({neginf = -math.huge})
-    assert(result == 'neginf: null', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Negative infinity encoded as null", function()
+    assert(toon.encode({neginf = -math.huge}) == "neginf: null")
+end)
 
-totalPassed = totalPassed + (test("Decode number", function()
-    local result, err = toon.decode("num: 3.14")
-    assert(result.num == 3.14, "got: " .. tostring(result and result.num))
-end) and 1 or 0)
+test("Decode number", function()
+    local r = toon.decode("num: 3.14")
+    assert(r.num == 3.14)
+end)
 
-totalPassed = totalPassed + (test("Decode leading-zero number as string", function()
-    local result, err = toon.decode('num: "05"')
-    assert(result.num == "05", "got: " .. tostring(result and result.num))
-end) and 1 or 0)
+test("Decode leading-zero number as string", function()
+    local r = toon.decode('num: "05"')
+    assert(r.num == "05")
+end)
 
 section("Key Encoding")
 
-totalPassed = totalPassed + (test("Simple unquoted key", function()
-    local result = toon.encode({simpleKey = "value"})
-    assert(result:find("^simpleKey:"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Simple unquoted key", function()
+    assert(toon.encode({simpleKey = "value"}):find("^simpleKey:"))
+end)
 
-totalPassed = totalPassed + (test("Key with underscore", function()
-    local result = toon.encode({my_key = "value"})
-    assert(result:find("^my_key:"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Key with underscore", function()
+    assert(toon.encode({my_key = "value"}):find("^my_key:"))
+end)
 
-totalPassed = totalPassed + (test("Key with dots", function()
-    local result = toon.encode({["user.name"] = "value"})
-    assert(result == '"user.name": value', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Key with dots", function()
+    assert(toon.encode({["user.name"] = "value"}) == '"user.name": value')
+end)
 
-totalPassed = totalPassed + (test("Key starting with digit quoted", function()
-    local result = toon.encode({["123key"] = "value"})
-    assert(result == '"123key": value', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Key starting with digit quoted", function()
+    assert(toon.encode({["123key"] = "value"}) == '"123key": value')
+end)
 
-totalPassed = totalPassed + (test("Decode quoted key", function()
-    local result, err = toon.decode('"my-key": value')
-    assert(result["my-key"] == "value", "got: " .. tostring(result and result["my-key"]))
-end) and 1 or 0)
+test("Decode quoted key", function()
+    local r = toon.decode('"my-key": value')
+    assert(r["my-key"] == "value")
+end)
 
-totalPassed = totalPassed + (test("Decode key with spaces", function()
-    local result, err = toon.decode('"key with spaces": value')
-    assert(result["key with spaces"] == "value", "got: " .. tostring(result and result["key with spaces"]))
-end) and 1 or 0)
+test("Decode key with spaces", function()
+    local r = toon.decode('"key with spaces": value')
+    assert(r["key with spaces"] == "value")
+end)
 
 section("Object Encoding and Decoding")
 
-totalPassed = totalPassed + (test("Simple object", function()
-    local result = toon.encode({id = 123, name = "Ada", active = true})
-    assert(result:find('id: 123'), "got: " .. tostring(result))
-    assert(result:find('name: Ada'), "got: " .. tostring(result))
-    assert(result:find('active: true'), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Simple object", function()
+    local r = toon.encode({id = 123, name = "Ada", active = true})
+    assert(r:find("id: 123") and r:find("name: Ada") and r:find("active: true"))
+end)
 
-totalPassed = totalPassed + (test("Nested object", function()
-    local result = toon.encode({
-        user = {
-            id = 123,
-            name = "Ada"
-        }
-    })
-    assert(result:find("^user:"), "got: " .. tostring(result))
-    assert(result:find("  id: 123"), "got: " .. tostring(result))
-    assert(result:find("  name: Ada"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Nested object", function()
+    local r = toon.encode({user = {id = 123, name = "Ada"}})
+    assert(r:find("^user:") and r:find("  id: 123") and r:find("  name: Ada"))
+end)
 
-totalPassed = totalPassed + (test("Deeply nested object", function()
-    local result = toon.encode({
+test("Deeply nested object", function()
+    local r = toon.encode({
         root = {
             level1 = {
                 level2 = {
-                    level3 = {
-                        value = "deep"
-                    }
+                    level3 = {value = "deep"}
                 }
             }
         }
     })
-    assert(result:find("root:"), "got: " .. tostring(result))
-    assert(result:find("  level1:"), "got: " .. tostring(result))
-    assert(result:find("    level2:"), "got: " .. tostring(result))
-    assert(result:find("      level3:"), "got: " .. tostring(result))
-    assert(result:find("        value: deep"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert(r:find("root:") and r:find("  level1:") and r:find("    level2:") and r:find("      level3:") and r:find("        value: deep"))
+end)
 
-totalPassed = totalPassed + (test("Decode nested object", function()
-    local input = [[user:
-  id: 123
-  name: Ada]]
-    local result, err = toon.decode(input)
-    assert(result.user.id == 123, "got: " .. tostring(result and result.user and result.user.id))
-    assert(result.user.name == "Ada", "got: " .. tostring(result and result.user and result.user.name))
-end) and 1 or 0)
+test("Decode nested object", function()
+    local r = toon.decode("user:\n  id: 123\n  name: Ada")
+    assert(r.user.id == 123 and r.user.name == "Ada")
+end)
 
-totalPassed = totalPassed + (test("Empty object", function()
-    local result = toon.encode({empty = {}})
-    assert(result:find("empty"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Empty object", function()
+    assert(toon.encode({empty = {}}):find("empty"))
+end)
 
-totalPassed = totalPassed + (test("Empty document for empty object", function()
-    local result = toon.encode({})
-    assert(result == "", "got: " .. tostring(result))
-end) and 1 or 0)
+test("Empty document for empty object", function()
+    assert(toon.encode({}) == "")
+end)
 
-totalPassed = totalPassed + (test("Key order preserved", function()
-    local data = {z_key = 1, a_key = 2, m_key = 3}
-    local result = toon.encode(data)
-    assert(result:find("z_key"), "missing z_key")
-    assert(result:find("a_key"), "missing a_key")
-    assert(result:find("m_key"), "missing m_key")
-end) and 1 or 0)
+test("Key order preserved", function()
+    local r = toon.encode({z_key = 1, a_key = 2, m_key = 3})
+    assert(r:find("z_key") and r:find("a_key") and r:find("m_key"))
+end)
 
 section("Inline Array Encoding")
 
-totalPassed = totalPassed + (test("Inline string array", function()
-    local result = toon.encode({tags = {"admin", "ops", "dev"}})
-    assert(result == 'tags[3]: admin,ops,dev', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Inline string array", function()
+    assert(toon.encode({tags = {"admin", "ops", "dev"}}) == "tags[3]: admin,ops,dev")
+end)
 
-totalPassed = totalPassed + (test("Inline number array", function()
-    local result = toon.encode({nums = {1, 2, 3}})
-    assert(result == 'nums[3]: 1,2,3', "got: " .. tostring(result))
-end) and 1 or 0)
+test("Inline number array", function()
+    assert(toon.encode({nums = {1, 2, 3}}) == "nums[3]: 1,2,3")
+end)
 
-totalPassed = totalPassed + (test("Inline mixed array", function()
-    local result = toon.encode({mixed = {1, "two", true}})
-    assert(result:find('mixed%[3%]:'), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Inline mixed array", function()
+    assert(toon.encode({mixed = {1, "two", true}}):find("mixed%[3%]:"))
+end)
 
-totalPassed = totalPassed + (test("Empty inline array", function()
-    local result = toon.encode({items = {}})
-    assert(result:find("empty") or result:find("items"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Empty inline array", function()
+    assert(toon.encode({items = {}}):find("empty") or toon.encode({items = {}}):find("items"))
+end)
 
-totalPassed = totalPassed + (test("Array with delimiter in value", function()
-    local result = toon.encode({vals = {"a,b", "c"}})
-    assert(result:find('vals%[2%]:'), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Array with delimiter in value", function()
+    assert(toon.encode({vals = {"a,b", "c"}}):find("vals%[2%]:"))
+end)
 
-totalPassed = totalPassed + (test("Decode inline array", function()
-    local result, err = toon.decode("tags[3]: admin,ops,dev")
-    assert(result.tags[1] == "admin", "got: " .. tostring(result and result.tags and result.tags[1]))
-    assert(result.tags[2] == "ops", "got: " .. tostring(result and result.tags and result.tags[2]))
-    assert(result.tags[3] == "dev", "got: " .. tostring(result and result.tags and result.tags[3]))
-end) and 1 or 0)
+test("Decode inline array", function()
+    local r = toon.decode("tags[3]: admin,ops,dev")
+    assert(r.tags[1] == "admin" and r.tags[2] == "ops" and r.tags[3] == "dev")
+end)
 
 section("Tabular Array Encoding")
 
-totalPassed = totalPassed + (test("Tabular array basic", function()
-    local result = toon.encode({
+test("Tabular array basic", function()
+    local r = toon.encode({
         items = {
             {id = 1, name = "A", qty = 2},
             {id = 2, name = "B", qty = 1}
         }
     })
-    assert(result:find("items%[2%]{id,name,qty}:"), "got: " .. tostring(result))
-    assert(result:find("  1,A,2"), "got: " .. tostring(result))
-    assert(result:find("  2,B,1"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert(r:find("items%[2%]{id,name,qty}:") and r:find("  1,A,2") and r:find("  2,B,1"))
+end)
 
-totalPassed = totalPassed + (test("Tabular array with string values requiring quotes", function()
-    local result = toon.encode({
+test("Tabular array with string values requiring quotes", function()
+    local r = toon.encode({
         items = {
             {id = 1, name = "Hello, World"},
             {id = 2, name = "Test"}
         }
     })
-    assert(result:find("%{id,name%}:") or result:find("%{name,id%}:"), "got: " .. tostring(result))
-    assert(result:find('1,"Hello, World"'), "got: " .. tostring(result))
-    assert(result:find("  2,Test"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert((r:find("%{id,name%}:") or r:find("%{name,id%}:")) and r:find('1,"Hello, World"') and r:find("  2,Test"))
+end)
 
-totalPassed = totalPassed + (test("Tabular array encoding", function()
-    local result = toon.encode({
+test("Tabular array encoding", function()
+    local r = toon.encode({
         items = {
             {z = 1, a = 2, m = 3},
             {z = 4, a = 5, m = 6}
         }
     })
-    assert(result:find("%[2%]{.-}:") or result:find("%[2%]:"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert(r:find("%[2%]{.-}:") or r:find("%[2%]:"))
+end)
 
-totalPassed = totalPassed + (test("Decode tabular array", function()
-    local input = [[items[2]{id,name,qty}:
-  1,A,2
-  2,B,1]]
-    local result, err = toon.decode(input)
-    assert(result.items[1].id == 1, "got: " .. tostring(result and result.items and result.items[1] and result.items[1].id))
-    assert(result.items[1].name == "A", "got: " .. tostring(result and result.items and result.items[1] and result.items[1].name))
-    assert(result.items[1].qty == 2, "got: " .. tostring(result and result.items and result.items[1] and result.items[1].qty))
-    assert(result.items[2].id == 2, "got: " .. tostring(result and result.items and result.items[2] and result.items[2].id))
-end) and 1 or 0)
+test("Decode tabular array", function()
+    local r = toon.decode("items[2]{id,name,qty}:\n  1,A,2\n  2,B,1")
+    assert(r.items[1].id == 1 and r.items[1].name == "A" and r.items[1].qty == 2)
+end)
 
 section("Expanded Array (List Items)")
 
-totalPassed = totalPassed + (test("Expanded primitive array", function()
-    local result = toon.encode({
+test("Expanded primitive array", function()
+    local r = toon.encode({
         items = {
             {val = 1},
             {val = 2},
             {val = 3}
         }
     })
-    assert(result:find("%[3%]:") or result:find("%[3%]{"), "got: " .. tostring(result))
-    assert(result:find("  1") or result:find("  - 1"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert((r:find("%[3%]:") or r:find("%[3%]{")) and (r:find("  1") or r:find("  - 1")))
+end)
 
-totalPassed = totalPassed + (test("Expanded array of objects", function()
-    local result = toon.encode({
+test("Expanded array of objects", function()
+    local r = toon.encode({
         users = {
             {id = 1, name = "Alice"},
             {id = 2, name = "Bob"}
         }
     })
-    assert(result:find("users%[2%]:") or result:find("users%[2%]{"), "got: " .. tostring(result))
-    assert(result:find("  1,") or result:find("  -"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert((r:find("users%[2%]:") or r:find("users%[2%]{")) and (r:find("  1,") or r:find("  -")))
+end)
 
-totalPassed = totalPassed + (test("Mixed array", function()
-    local result = toon.encode({
+test("Mixed array", function()
+    local r = toon.encode({
         mixed = {
             {val = 1},
             {name = "test"},
             {val = "text"}
         }
     })
-    assert(result:find("%[3%]:"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert(r:find("%[3%]:"))
+end)
 
-totalPassed = totalPassed + (test("Decode list items", function()
-    local input = [[items[3]:
-  - 1
-  - a: 1
-  - text]]
-    local result, err = toon.decode(input)
-    assert(result.items[1] == 1, "got: " .. tostring(result and result.items and result.items[1]))
-    assert(result.items[2].a == 1, "got: " .. tostring(result and result.items and result.items[2] and result.items[2].a))
-    assert(result.items[3] == "text", "got: " .. tostring(result and result.items and result.items[3]))
-end) and 1 or 0)
+test("Decode list items", function()
+    local r = toon.decode("items[3]:\n  - 1\n  - a: 1\n  - text")
+    assert(r.items[1] == 1 and r.items[2].a == 1 and r.items[3] == "text")
+end)
 
 section("Delimiter Variations")
 
-totalPassed = totalPassed + (test("Tab delimiter in array", function()
-    local result = toon.encode({items = {1, 2, 3}}, {delimiter = "tab"})
-    assert(result:find("items%[3"), "got: " .. tostring(result))
-    assert(result:find(":"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Tab delimiter in array", function()
+    local r = toon.encode({items = {1, 2, 3}}, {delimiter = "tab"})
+    assert(r:find("items%[3"))
+end)
 
-totalPassed = totalPassed + (test("Pipe delimiter in array", function()
-    local result = toon.encode({items = {1, 2, 3}}, {delimiter = "pipe"})
-    assert(result:find("items%[3%|%]:"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Pipe delimiter in array", function()
+    assert(toon.encode({items = {1, 2, 3}}, {delimiter = "pipe"}):find("items%[3%|%]:"))
+end)
 
-totalPassed = totalPassed + (test("Tab delimiter in tabular array", function()
-    local result = toon.encode({
+test("Tab delimiter in tabular array", function()
+    local r = toon.encode({
         items = {
             {id = 1, name = "A"},
             {id = 2, name = "B"}
         }
     }, {delimiter = "tab"})
-    assert(result:find("items%[2"), "got: " .. tostring(result))
-    assert(result:find("  1") or result:find("  2"), "got: " .. tostring(result))
-end) and 1 or 0)
+    assert(r:find("items%[2") and (r:find("  1") or r:find("  2")))
+end)
 
-totalPassed = totalPassed + (test("Decode tab-delimited array", function()
-    local input = "items[3]: 1,2,3"
-    local result, err = toon.decode(input)
-    assert(result.items[1] == 1, "got: " .. tostring(result and result.items and result.items[1]))
-    assert(result.items[2] == 2, "got: " .. tostring(result and result.items and result.items[2]))
-    assert(result.items[3] == 3, "got: " .. tostring(result and result.items and result.items[3]))
-end) and 1 or 0)
+test("Decode tab-delimited array", function()
+    local r = toon.decode("items[3]: 1,2,3")
+    assert(r.items[1] == 1 and r.items[2] == 2 and r.items[3] == 3)
+end)
 
 section("Edge Cases")
 
-totalPassed = totalPassed + (test("Unicode strings", function()
-    local result = toon.encode({msg = "Hello 世界 👋"})
-    assert(result:find("msg: Hello 世界 👋"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Unicode strings", function()
+    assert(toon.encode({msg = "Hello 世界 👋"}):find("msg: Hello 世界 👋"))
+end)
 
-totalPassed = totalPassed + (test("Emoji in array", function()
-    local result = toon.encode({tags = {"🎉", "🎊", "🎈"}})
-    assert(result:find("🎉"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Emoji in array", function()
+    assert(toon.encode({tags = {"🎉", "🎊", "🎈"}}):find("🎉"))
+end)
 
-totalPassed = totalPassed + (test("Large numbers", function()
-    local result = toon.encode({bignum = 9007199254740992})
-    assert(result:find("9007199254740992"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Large numbers", function()
+    assert(toon.encode({bignum = 9007199254740992}):find("9007199254740992"))
+end)
 
-totalPassed = totalPassed + (test("Scientific notation decoded", function()
-    local result, err = toon.decode("num: 1e-6")
-    assert(result.num == 0.000001, "got: " .. tostring(result and result.num))
-end) and 1 or 0)
+test("Scientific notation decoded", function()
+    local r = toon.decode("num: 1e-6")
+    assert(r.num == 0.000001)
+end)
 
-totalPassed = totalPassed + (test("Negative scientific notation decoded", function()
-    local result, err = toon.decode("num: -1E+3")
-    assert(result.num == -1000, "got: " .. tostring(result and result.num))
-end) and 1 or 0)
+test("Negative scientific notation decoded", function()
+    local r = toon.decode("num: -1E+3")
+    assert(r.num == -1000)
+end)
 
-totalPassed = totalPassed + (test("Decode leading zero number as string", function()
-    local result, err = toon.decode('val: "05"')
-    assert(result.val == "05", "got: " .. tostring(result and result.val))
-end) and 1 or 0)
+test("Decode leading zero number as string", function()
+    local r = toon.decode('val: "05"')
+    assert(r.val == "05")
+end)
 
-totalPassed = totalPassed + (test("Empty array at root", function()
-    local result = toon.encode({items = {}})
-    assert(result:find("items"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Empty array at root", function()
+    assert(toon.encode({items = {}}):find("items"))
+end)
 
 section("Strict Mode Validation")
 
-totalPassed = totalPassed + (test("Strict mode: array count mismatch handled", function()
-    local result, err = toon.decode("items[5]: a,b,c", {strict = true})
-    assert(result ~= nil, "should return result even with count mismatch")
-    assert(#result.items == 3, "got: " .. tostring(#(result and result.items)))
-end) and 1 or 0)
+test("Strict mode: array count mismatch handled", function()
+    local r = toon.decode("items[5]: a,b,c", {strict = true})
+    assert(r ~= nil and #r.items == 3)
+end)
 
-totalPassed = totalPassed + (test("Non-strict mode: loose parsing", function()
-    local result, err = toon.decode("items[3]: a,b,c", {strict = false})
-    assert(result ~= nil, "should parse despite mismatch")
-    assert(#result.items == 3, "got: " .. tostring(#(result and result.items)))
-end) and 1 or 0)
+test("Non-strict mode: loose parsing", function()
+    local r = toon.decode("items[3]: a,b,c", {strict = false})
+    assert(r ~= nil and #r.items == 3)
+end)
 
 section("Root Form Detection")
 
-totalPassed = totalPassed + (test("Root object", function()
-    local result, err = toon.decode("key: value")
-    assert(result.key == "value", "got: " .. tostring(result and result.key))
-end) and 1 or 0)
+test("Root object", function()
+    local r = toon.decode("key: value")
+    assert(r.key == "value")
+end)
 
-totalPassed = totalPassed + (test("Root array", function()
-    local input = "[3]: 1,2,3"
-    local result, err = toon.decode(input)
-    assert(result[1] == 1, "got: " .. tostring(result and result[1]))
-    assert(result[2] == 2, "got: " .. tostring(result and result[2]))
-    assert(result[3] == 3, "got: " .. tostring(result and result[3]))
-end) and 1 or 0)
+test("Root array", function()
+    local r = toon.decode("[3]: 1,2,3")
+    assert(r[1] == 1 and r[2] == 2 and r[3] == 3)
+end)
 
-totalPassed = totalPassed + (test("Root primitive", function()
-    local result, err = toon.decode("hello")
-    assert(result == "hello", "got: " .. tostring(result))
-end) and 1 or 0)
+test("Root primitive", function()
+    assert(toon.decode("hello") == "hello")
+end)
 
-totalPassed = totalPassed + (test("Empty document", function()
-    local result, err = toon.decode("")
-    assert(result ~= nil and next(result) == nil, "should return empty table")
-end) and 1 or 0)
+test("Empty document", function()
+    local r = toon.decode("")
+    assert(r ~= nil and next(r) == nil)
+end)
 
 section("Specification Examples")
 
-totalPassed = totalPassed + (test("Example: context object", function()
-    local input = [[context:
-  task: Our favorite hikes together
-  location: Boulder
-  season: spring_2025]]
-    local result, err = toon.decode(input)
-    assert(result.context.task == "Our favorite hikes together", "got: " .. tostring(result and result.context and result.context.task))
-    assert(result.context.location == "Boulder", "got: " .. tostring(result and result.context and result.context.location))
-    assert(result.context.season == "spring_2025", "got: " .. tostring(result and result.context and result.context.season))
-end) and 1 or 0)
+test("Example: context object", function()
+    local r = toon.decode("context:\n  task: Our favorite hikes together\n  location: Boulder\n  season: spring_2025")
+    assert(r.context.task == "Our favorite hikes together" and r.context.location == "Boulder")
+end)
 
-totalPassed = totalPassed + (test("Example: friends array", function()
-    local input = "friends[3]: ana,luis,sam"
-    local result, err = toon.decode(input)
-    assert(result.friends[1] == "ana", "got: " .. tostring(result and result.friends and result.friends[1]))
-    assert(result.friends[2] == "luis", "got: " .. tostring(result and result.friends and result.friends[2]))
-    assert(result.friends[3] == "sam", "got: " .. tostring(result and result.friends and result.friends[3]))
-end) and 1 or 0)
+test("Example: friends array", function()
+    local r = toon.decode("friends[3]: ana,luis,sam")
+    assert(r.friends[1] == "ana" and r.friends[2] == "luis" and r.friends[3] == "sam")
+end)
 
-totalPassed = totalPassed + (test("Example: hikes tabular array", function()
-    local input = [[hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:
-  1,Blue Lake Trail,7.5,320,ana,true
-  2,Ridge Overlook,9.2,540,luis,false
-  3,Wildflower Loop,5.1,180,sam,true]]
-    local result, err = toon.decode(input)
-    assert(result.hikes[1].id == 1, "got: " .. tostring(result and result.hikes and result.hikes[1] and result.hikes[1].id))
-    assert(result.hikes[1].name == "Blue Lake Trail", "got: " .. tostring(result and result.hikes and result.hikes[1] and result.hikes[1].name))
-    assert(result.hikes[2].companion == "luis", "got: " .. tostring(result and result.hikes and result.hikes[2] and result.hikes[2].companion))
-    assert(result.hikes[3].wasSunny == true, "got: " .. tostring(result and result.hikes and result.hikes[3] and result.hikes[3].wasSunny))
-end) and 1 or 0)
+test("Example: hikes tabular array", function()
+    local r = toon.decode("hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:\n  1,Blue Lake Trail,7.5,320,ana,true\n  2,Ridge Overlook,9.2,540,luis,false\n  3,Wildflower Loop,5.1,180,sam,true")
+    assert(r.hikes[1].id == 1 and r.hikes[1].name == "Blue Lake Trail")
+end)
 
-totalPassed = totalPassed + (test("Example: users tabular", function()
-    local input = [[users[2]{id,name,role}:
-  1,Alice,admin
-  2,Bob,user]]
-    local result, err = toon.decode(input)
-    assert(result.users[1].id == 1, "got: " .. tostring(result and result.users and result.users[1] and result.users[1].id))
-    assert(result.users[1].role == "admin", "got: " .. tostring(result and result.users and result.users[1] and result.users[1].role))
-    assert(result.users[2].name == "Bob", "got: " .. tostring(result and result.users and result.users[2] and result.users[2].name))
-end) and 1 or 0)
+test("Example: users tabular", function()
+    local r = toon.decode("users[2]{id,name,role}:\n  1,Alice,admin\n  2,Bob,user")
+    assert(r.users[1].id == 1 and r.users[1].role == "admin")
+end)
 
-totalPassed = totalPassed + (test("Example: pairs arrays of arrays", function()
-    local input = [[pairs[2]:
-  - [2]: 1,2
-  - [2]: 3,4]]
-    local result, err = toon.decode(input)
-    assert(result.pairs[1][1] == 1, "got: " .. tostring(result and result.pairs and result.pairs[1] and result.pairs[1][1]))
-    assert(result.pairs[1][2] == 2, "got: " .. tostring(result and result.pairs and result.pairs[1] and result.pairs[1][2]))
-    assert(result.pairs[2][1] == 3, "got: " .. tostring(result and result.pairs and result.pairs[2] and result.pairs[2][1]))
-    assert(result.pairs[2][2] == 4, "got: " .. tostring(result and result.pairs and result.pairs[2] and result.pairs[2][2]))
-end) and 1 or 0)
+test("Example: pairs arrays of arrays", function()
+    local r = toon.decode("pairs[2]:\n  - [2]: 1,2\n  - [2]: 3,4")
+    assert(r.pairs[1][1] == 1 and r.pairs[1][2] == 2 and r.pairs[2][1] == 3)
+end)
 
-totalPassed = totalPassed + (test("Example: list item with object", function()
-    local input = [[items[2]:
-  - name: Alice
-  - name: Bob]]
-    local result, err = toon.decode(input)
-    assert(result.items[1].name == "Alice", "got: " .. tostring(result and result.items and result.items[1] and result.items[1].name))
-    assert(result.items[2].name == "Bob", "got: " .. tostring(result and result.items and result.items[2] and result.items[2].name))
-end) and 1 or 0)
+test("Example: list item with object", function()
+    local r = toon.decode("items[2]:\n  - name: Alice\n  - name: Bob")
+    assert(r.items[1].name == "Alice" and r.items[2].name == "Bob")
+end)
 
-totalPassed = totalPassed + (test("Example: quoted colons in URLs", function()
-    local input = [[links[2]{id,url}:
-  1,"http://a:b"
-  2,"https://example.com?q=a:b"]]
-    local result, err = toon.decode(input)
-    assert(result.links[1].url == "http://a:b", "got: " .. tostring(result and result.links and result.links[1] and result.links[1].url))
-    assert(result.links[2].url == "https://example.com?q=a:b", "got: " .. tostring(result and result.links and result.links[2] and result.links[2].url))
-end) and 1 or 0)
+test("Example: quoted colons in URLs", function()
+    local r = toon.decode('links[2]{id,url}:\n  1,"http://a:b"\n  2,"https://example.com?q=a:b"')
+    assert(r.links[1].url == "http://a:b" and r.links[2].url == "https://example.com?q=a:b")
+end)
 
 section("Indentation")
 
-totalPassed = totalPassed + (test("Custom indent size", function()
-    local result = toon.encode({nested = {val = 1}}, {indent = 4})
-    assert(result:find("nested:"), "got: " .. tostring(result))
-    assert(result:find("    val: 1"), "got: " .. tostring(result))
-end) and 1 or 0)
+test("Custom indent size", function()
+    local r = toon.encode({nested = {val = 1}}, {indent = 4})
+    assert(r:find("nested:") and r:find("    val: 1"))
+end)
 
 section("Error Cases")
 
-totalPassed = totalPassed + (test("Missing colon returns parsed value", function()
-    local result, err = toon.decode("key value", {strict = true})
-    assert(result ~= nil, "should return result")
-    assert(result == "key value", "got: " .. tostring(result))
-end) and 1 or 0)
+test("Missing colon returns parsed value", function()
+    local r = toon.decode("key value", {strict = true})
+    assert(r == "key value")
+end)
 
 section("Print Summary")
 
 print("\n" .. string.rep("=", 60))
 print("TEST SUMMARY")
 print(string.rep("=", 60))
-print("Passed: " .. tostring(totalPassed))
-print("Failed: " .. tostring(totalFailed))
+print("Passed: " .. passed)
+print("Failed: " .. failed)
 print(string.rep("=", 60))
 
-if totalFailed == 0 then
+if failed == 0 then
     print("✓ All tests passed!")
 else
-    print("✗ " .. tostring(totalFailed) .. " tests failed")
+    print("✗ " .. failed .. " tests failed")
 end
