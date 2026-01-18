@@ -161,8 +161,14 @@ encodeObject = function(o, lvl, opts, delim)
         end
 
         local tp = type(v)
-        if tp == "table" and next(v) ~= nil then
-            if isArray(v) then
+        if tp == "table" then
+            if next(v) == nil then
+                if isArray(v) then
+                    lines[#lines+1] = fk .. "[0]:"
+                else
+                    lines[#lines+1] = fk .. ":"
+                end
+            elseif isArray(v) then
                 local en = encodeArray(v, lvl, opts, delim)
                 local nl = en:find("\n")
                 if nl then
@@ -195,8 +201,14 @@ function toon.encode(d, o)
             fk = '"' .. escapeString(k) .. '"'
         end
         local tp = type(v)
-        if tp == "table" and next(v) ~= nil then
-            if isArray(v) then
+        if tp == "table" then
+            if next(v) == nil then
+                if isArray(v) then
+                    lines[#lines+1] = fk .. "[0]:"
+                else
+                    lines[#lines+1] = fk .. ":"
+                end
+            elseif isArray(v) then
                 local en = encodeArray(v, 0, o, delim)
                 local nl = en:find("\n")
                 if nl then
@@ -259,22 +271,51 @@ local function splitDelim(s, d)
 end
 
 local function parseArrayHeader(line)
-    local bs, be = line:find("%[")
+    local bs = line:find("%[")
     if not bs then return nil end
-    be = line:find("]", be)
+    local be = line:find("]", bs)
     if not be then return nil end
-    local cnt = tonumber(line:sub(bs + 1, be - 1))
+    
+    local inside = line:sub(bs + 1, be - 1)
+    
+    local cnt, d
+    
+    local pipe_pos = inside:find("|")
+    if pipe_pos then
+        local count_part = inside:sub(1, pipe_pos - 1)
+        local delim_part = inside:sub(pipe_pos + 1)
+        cnt = tonumber(count_part)
+        if delim_part == "" then
+            d = "|"
+        else
+            d = delim_part
+        end
+    else
+        local tab_pos = inside:find("\t")
+        if tab_pos then
+            local count_part = inside:sub(1, tab_pos - 1)
+            local delim_part = inside:sub(tab_pos + 1)
+            cnt = tonumber(count_part)
+            if delim_part == "" then
+                d = "\t"
+            else
+                d = delim_part
+            end
+        else
+            cnt = tonumber(inside)
+            d = ","
+        end
+    end
+    
     if not cnt then return nil end
-    local d = ","
-    local ch = line:sub(be + 1, be + 1)
-    if ch == "\t" then d = "\t" elseif ch == "|" then d = "|" end
+    
     local fl = nil
     local rest = line:sub(be + 1)
     if rest:sub(1, 1) == "{" then
         local eb = rest:find("}")
         if eb then
             fl = {}
-            for f in rest:sub(2, eb - 1):gmatch("[^" .. d .. "]+") do
+            for f in rest:sub(2, eb - 1):gmatch("[^,]+") do
                 f = trim(f)
                 if f:sub(1,1) == '"' and f:sub(-1) == '"' then f = unescapeString(f:sub(2, -2)) end
                 fl[#fl+1] = f
