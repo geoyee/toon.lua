@@ -954,10 +954,10 @@ end)
 
 -- Section 8: Objects
 -- Empty object decoding
--- Note: Empty object `key:` is parsed as having a nil value
+-- According to TOON spec, a key followed by a colon and nothing else is an empty object
 test("Decode empty object", function()
     local r = toon.decode("empty:")
-    assert(r["empty"] == nil)
+    assert(type(r["empty"]) == "table" and next(r["empty"]) == nil)
 end)
 
 -- Section 8: Objects

@@ -157,7 +157,7 @@ local function escapeString(s)
         elseif c == "\r" then escape = "\\r"
         elseif c == "\t" then escape = "\\t"
         elseif string.byte(c) <= 31 then
-            escape = "\\" .. string.byte(c)
+            escape = string.format("\\%03d", string.byte(c))
         end
         
         if escape then
@@ -474,7 +474,6 @@ local function foldValue(prefix, v, opts, delim, lines)
     else
         for k, val in pairs(v) do
             local fk = encodeKey(k)
-            lines[#lines + 1] = prefix .. "." .. fk .. ":"
             foldValue(prefix .. "." .. fk, val, opts, delim, lines)
         end
     end
@@ -927,11 +926,18 @@ local function decodeObject(lines, startDepth, opts)
                     if hasContent then
                         local nested = decodeObject(nestedLines, depth, opts)
                         local pathParts = k:find("%.") and splitPath(k) or nil
-                        
+
                         if opts.pathExpansion and pathParts then
                             setNestedValue(result, k, nested, pathParts)
                         else
                             result[k] = nested
+                        end
+                    else
+                        local pathParts = k:find("%.") and splitPath(k) or nil
+                        if opts.pathExpansion and pathParts then
+                            setNestedValue(result, k, {}, pathParts)
+                        else
+                            result[k] = {}
                         end
                     end
                     
