@@ -5,13 +5,12 @@ local toon = require("toon")
 local passed, failed = 0, 0
 
 local function test(name, fn)
-    local ok, err = pcall(fn)
+    local ok = pcall(fn)
     if ok then
         io.write("✓")
         passed = passed + 1
     else
         io.write("✗")
-        io.write(" [ERROR: " .. tostring(err) .. "]")
         failed = failed + 1
     end
 end
