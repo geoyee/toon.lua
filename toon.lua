@@ -147,6 +147,75 @@ encodeArray = function(a, lvl, opts, delim)
     return table.concat(lines, "\n")
 end
 
+local function canFoldKey(v, path)
+    path = path or ""
+    if type(v) ~= "table" then return false, path == "" and nil or path, v end
+    if next(v) == nil then return false, path == "" and nil or path, nil end
+    if isArray(v) then return false, path == "" and nil or path, nil end
+    
+    local keys = {}
+    for k in pairs(v) do table.insert(keys, k) end
+    if #keys ~= 1 then return false, path == "" and nil or path, nil end
+    
+    local key = keys[1]
+    if type(key) ~= "string" then return false, path == "" and nil or path, nil end
+    if key == "" or key:find("[%.%s]") or not key:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+        return false, path == "" and nil or path, nil
+    end
+    
+    local newPath = path == "" and key or path .. "." .. key
+    local child = v[key]
+    return canFoldKey(child, newPath)
+end
+
+local function getNestedValue(v, path)
+    local parts = {}
+    for part in path:gmatch("[^%.]+") do table.insert(parts, part) end
+    for i, part in ipairs(parts) do
+        if i < #parts then
+            v = v[part]
+            if v == nil then return nil end
+        else
+            return v[part]
+        end
+    end
+    return nil
+end
+
+local function foldValue(prefix, v, lvl, opts, delim, lines)
+    local tp = type(v)
+    
+    if tp ~= "table" or isArray(v) then
+        local val = encodeValue(v, opts, delim)
+        lines[#lines+1] = prefix .. ": " .. val
+        return
+    end
+    
+    if next(v) == nil then
+        lines[#lines+1] = prefix .. ":"
+        return
+    end
+    
+    local foldable, foldedPath, _ = canFoldKey(v)
+    if foldable or foldedPath then
+        local leafValue = getNestedValue(v, foldedPath)
+        if leafValue ~= nil then
+            lines[#lines+1] = prefix .. "." .. foldedPath .. ": " .. encodeValue(leafValue, opts, delim)
+        else
+            lines[#lines+1] = prefix .. "." .. foldedPath .. ":"
+        end
+    else
+        for k, val in pairs(v) do
+            local fk = k
+            if type(k) ~= "string" or k == "" or k:find("[%.%s]") or not k:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+                fk = '"' .. escapeString(k) .. '"'
+            end
+            lines[#lines+1] = prefix .. "." .. fk .. ":"
+            foldValue(prefix .. "." .. fk, val, lvl + 1, opts, delim, lines)
+        end
+    end
+end
+
 encodeObject = function(o, lvl, opts, delim)
     if type(o) ~= "table" then return "null" end
     local ind = string.rep(" ", (opts.indent or 2) * lvl)
@@ -195,11 +264,14 @@ function toon.encode(d, o)
     o = o or {}
     local lines = {}
     local delim = getDelimiter(o)
+    local folding = o.keyFolding
+    
     for k, v in pairs(d) do
         local fk = k
         if type(k) ~= "string" or k == "" or k:find("[%.%s]") or not k:match("^[A-Za-z_][A-Za-z0-9_]*$") then
             fk = '"' .. escapeString(k) .. '"'
         end
+        
         local tp = type(v)
         if tp == "table" then
             if next(v) == nil then
@@ -216,6 +288,14 @@ function toon.encode(d, o)
                     lines[#lines+1] = en:sub(nl + 1)
                 else
                     lines[#lines+1] = fk .. en
+                end
+            elseif folding then
+                local foldable, foldedKey = canFoldKey(v)
+                if foldable or foldedKey then
+                    foldValue(fk, v, 0, o, delim, lines)
+                else
+                    lines[#lines+1] = fk .. ":"
+                    lines[#lines+1] = encodeObject(v, 1, o, delim)
                 end
             else
                 lines[#lines+1] = fk .. ":"
@@ -335,6 +415,22 @@ local function parseTabularRow(l, fs, d)
     return o
 end
 
+local function setNestedValue(t, path, value)
+    local parts = {}
+    for part in path:gmatch("[^%.]+") do table.insert(parts, part) end
+    local current = t
+    for i, part in ipairs(parts) do
+        if i == #parts then
+            current[part] = value
+        else
+            if current[part] == nil or type(current[part]) ~= "table" then
+                current[part] = {}
+            end
+            current = current[part]
+        end
+    end
+end
+
 local function parseListItem(l)
     if not l:find("^%s*- ") then return nil end
     local c = trim(l:match("^%s*-(.*)$") or "")
@@ -356,7 +452,8 @@ end
 
 local function countSpaces(l) return (l:match("^ *") or ""):len() end
 
-local function decodeObject(ls, sd)
+local function decodeObject(ls, sd, opts)
+    opts = opts or {}
     local r, i = {}, 1
     while i <= #ls do
         local ln = ls[i]
@@ -385,13 +482,21 @@ local function decodeObject(ls, sd)
                     a[#a+1] = parseTabularRow(ls[j], h.fields, h.delimiter)
                     j = j + 1
                 end
-                r[key] = a
+                if opts.pathExpansion and key:find("%.") then
+                    setNestedValue(r, key, a)
+                else
+                    r[key] = a
+                end
                 i = j
             elseif h.inlineValue then
                 for v in h.inlineValue:gmatch("[^" .. h.delimiter .. "]+") do
                     a[#a+1] = parseValue(trim(v))
                 end
-                r[key] = a
+                if opts.pathExpansion and key:find("%.") then
+                    setNestedValue(r, key, a)
+                else
+                    r[key] = a
+                end
                 i = i + 1
             else
                 local j = i + 1
@@ -399,7 +504,11 @@ local function decodeObject(ls, sd)
                     if ls[j]:find("^%s*- ") then a[#a+1] = parseListItem(ls[j]) end
                     j = j + 1
                 end
-                r[key] = a
+                if opts.pathExpansion and key:find("%.") then
+                    setNestedValue(r, key, a)
+                else
+                    r[key] = a
+                end
                 i = j
             end
         else
@@ -415,11 +524,20 @@ local function decodeObject(ls, sd)
                         j = j + 1
                     end
                     if hc then
-                        r[k] = decodeObject(ns, d)
+                        local nested = decodeObject(ns, d, opts)
+                        if opts.pathExpansion and k:find("%.") then
+                            setNestedValue(r, k, nested)
+                        else
+                            r[k] = nested
+                        end
                     end
                     i = j
                 else
-                    r[k] = v
+                    if opts.pathExpansion and k:find("%.") then
+                        setNestedValue(r, k, v)
+                    else
+                        r[k] = v
+                    end
                     i = i + 1
                 end
             else
@@ -438,8 +556,9 @@ local function parseLines(t)
     return l
 end
 
-function toon.decode(t)
+function toon.decode(t, opts)
     t = t or ""
+    opts = opts or {}
     local ls = parseLines(t)
     if #ls == 0 then return {} end
 
@@ -467,7 +586,7 @@ function toon.decode(t)
         end
     end
 
-    return decodeObject(ls, 0)
+    return decodeObject(ls, 0, opts)
 end
 
 return toon

@@ -65,6 +65,7 @@ Options:
 
 - `indent` (number): spaces per indent level (default: 2)
 - `delimiter` (string): array delimiter - `","`, `"|"`, `"\t"` (default: ",")
+- `keyFolding` (string): fold nested keys into dotted notation - `"safe"` (default: nil)
 
 ### toon.decode(text[, options])
 
@@ -73,6 +74,7 @@ Decode a TOON string to Lua table.
 Options:
 
 - `strict` (boolean): strict parsing mode (default: false)
+- `pathExpansion` (boolean): expand dotted keys into nested tables (default: false)
 
 ## Array Formats
 
@@ -90,7 +92,3 @@ toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
 --   1,A
 --   2,B
 ```
-
-## License
-
-MIT

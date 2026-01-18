@@ -751,45 +751,41 @@ end)
 section("Key Folding and Path Expansion")
 
 -- Section 13.4: Key Folding and Path Expansion
--- Note: keyFolding feature is not implemented in this version
--- These tests document expected behavior but are skipped
+-- Safe mode folding collapses single-key object chains
 test("Key folding basic", function()
     local data = {a = {b = {c = 1}}}
     local result = toon.encode(data, {keyFolding = "safe"})
-    -- Implementation returns nested format, not folded format
-    assert(result ~= nil and result:find("a:") and result:find("b:") and result:find("c: 1"))
+    assert(result == "a.b.c: 1")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
+-- Folding works with inline arrays
 test("Key folding with inline array", function()
     local data = {data = {meta = {items = {"x", "y"}}}}
     local result = toon.encode(data, {keyFolding = "safe"})
-    -- Implementation returns nested format
-    assert(result ~= nil and result:find("data:") and result:find("meta:"))
+    assert(result == "data.meta.items: [2]: x,y")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
+-- Folding works with tabular arrays
 test("Key folding with tabular array", function()
     local data = {a = {b = {items = {{id = 1, name = "A"}, {id = 2, name = "B"}}}}}
     local result = toon.encode(data, {keyFolding = "safe"})
-    -- Implementation returns nested format
-    assert(result ~= nil and result:find("a:") and result:find("b:"))
+    assert(result == "a.b.items: [2]{id,name}:\n  1,A\n  2,B")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
--- Note: Path expansion is not implemented
+-- Safe mode expansion splits dotted keys into nested objects
 test("Path expansion basic", function()
-    local r = toon.decode("data.meta.items[2]: a,b")
-    -- Without path expansion, dotted keys are literal keys
-    assert(r["data.meta.items"] ~= nil or r["data"] ~= nil)
+    local r = toon.decode("data.meta.items[2]: a,b", {pathExpansion = true})
+    assert(r["data"]["meta"]["items"][1] == "a" and r["data"]["meta"]["items"][2] == "b")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
--- Note: Path expansion is not implemented
+-- Deep merge semantics for multiple expanded keys
 test("Path expansion deep merge", function()
-    local r = toon.decode("a.b.c: 1\na.b.d: 2\na.e: 3")
-    -- Without path expansion, dotted keys are literal keys
-    assert(r["a.b.c"] == 1 or r["a"] ~= nil)
+    local r = toon.decode("a.b.c: 1\na.b.d: 2\na.e: 3", {pathExpansion = true})
+    assert(r["a"]["b"]["c"] == 1 and r["a"]["b"]["d"] == 2 and r["a"]["e"] == 3)
 end)
 
 section("Validation Errors (Strict Mode)")
