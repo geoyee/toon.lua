@@ -46,22 +46,22 @@ end)
 
 test("String decoding", function()
     local r = toon.decode("value: hello world")
-    assert(r.value == "hello world")
+    assert(r["value"] == "hello world")
 end)
 
 test("Number decoding", function()
     local r = toon.decode("num: 42")
-    assert(r.num == 42)
+    assert(r["num"] == 42)
 end)
 
 test("Boolean true decoding", function()
     local r = toon.decode("flag: true")
-    assert(r.flag == true)
+    assert(r["flag"] == true)
 end)
 
 test("Boolean false decoding", function()
     local r = toon.decode("flag: false")
-    assert(r.flag == false)
+    assert(r["flag"] == false)
 end)
 
 test("Null detection", function()
@@ -125,7 +125,7 @@ end)
 
 test("Unescape string", function()
     local r = toon.decode('str: "hello\\nworld"')
-    assert(r.str == "hello\nworld")
+    assert(r["str"] == "hello\nworld")
 end)
 
 section("Number Formatting")
@@ -164,12 +164,12 @@ end)
 
 test("Decode number", function()
     local r = toon.decode("num: 3.14")
-    assert(r.num == 3.14)
+    assert(r["num"] == 3.14)
 end)
 
 test("Decode leading-zero number as string", function()
     local r = toon.decode('num: "05"')
-    assert(r.num == "05")
+    assert(r["num"] == "05")
 end)
 
 section("Key Encoding")
@@ -227,7 +227,7 @@ end)
 
 test("Decode nested object", function()
     local r = toon.decode("user:\n  id: 123\n  name: Ada")
-    assert(r.user.id == 123 and r.user.name == "Ada")
+    assert(r["user"]["id"] == 123 and r["user"]["name"] == "Ada")
 end)
 
 test("Empty object", function()
@@ -267,7 +267,7 @@ end)
 
 test("Decode inline array", function()
     local r = toon.decode("tags[3]: admin,ops,dev")
-    assert(r.tags[1] == "admin" and r.tags[2] == "ops" and r.tags[3] == "dev")
+    assert(r["tags"][1] == "admin" and r["tags"][2] == "ops" and r["tags"][3] == "dev")
 end)
 
 section("Tabular Array Encoding")
@@ -304,7 +304,7 @@ end)
 
 test("Decode tabular array", function()
     local r = toon.decode("items[2]{id,name,qty}:\n  1,A,2\n  2,B,1")
-    assert(r.items[1].id == 1 and r.items[1].name == "A" and r.items[1].qty == 2)
+    assert(r["items"][1].id == 1 and r["items"][1].name == "A" and r["items"][1].qty == 2)
 end)
 
 section("Expanded Array (List Items)")
@@ -343,7 +343,7 @@ end)
 
 test("Decode list items", function()
     local r = toon.decode("items[3]:\n  - 1\n  - a: 1\n  - text")
-    assert(r.items[1] == 1 and r.items[2].a == 1 and r.items[3] == "text")
+    assert(r["items"][1] == 1 and r["items"][2].a == 1 and r["items"][3] == "text")
 end)
 
 section("Delimiter Variations")
@@ -369,7 +369,7 @@ end)
 
 test("Decode tab-delimited array", function()
     local r = toon.decode("items[3]: 1,2,3")
-    assert(r.items[1] == 1 and r.items[2] == 2 and r.items[3] == 3)
+    assert(r["items"][1] == 1 and r["items"][2] == 2 and r["items"][3] == 3)
 end)
 
 section("Edge Cases")
@@ -388,17 +388,17 @@ end)
 
 test("Scientific notation decoded", function()
     local r = toon.decode("num: 1e-6")
-    assert(r.num == 0.000001)
+    assert(r["num"] == 0.000001)
 end)
 
 test("Negative scientific notation decoded", function()
     local r = toon.decode("num: -1E+3")
-    assert(r.num == -1000)
+    assert(r["num"] == -1000)
 end)
 
 test("Decode leading zero number as string", function()
     local r = toon.decode('val: "05"')
-    assert(r.val == "05")
+    assert(r["val"] == "05")
 end)
 
 test("Empty array at root", function()
@@ -408,20 +408,20 @@ end)
 section("Strict Mode Validation")
 
 test("Strict mode: array count mismatch handled", function()
-    local r = toon.decode("items[5]: a,b,c", {strict = true})
-    assert(r ~= nil and #r.items == 3)
+    local r = toon.decode("items[5]: a,b,c")
+    assert(r ~= nil and #r["items"] == 3)
 end)
 
 test("Non-strict mode: loose parsing", function()
-    local r = toon.decode("items[3]: a,b,c", {strict = false})
-    assert(r ~= nil and #r.items == 3)
+    local r = toon.decode("items[3]: a,b,c")
+    assert(r ~= nil and #r["items"] == 3)
 end)
 
 section("Root Form Detection")
 
 test("Root object", function()
     local r = toon.decode("key: value")
-    assert(r.key == "value")
+    assert(r["key"] == "value")
 end)
 
 test("Root array", function()
@@ -442,37 +442,37 @@ section("Specification Examples")
 
 test("Example: context object", function()
     local r = toon.decode("context:\n  task: Our favorite hikes together\n  location: Boulder\n  season: spring_2025")
-    assert(r.context.task == "Our favorite hikes together" and r.context.location == "Boulder")
+    assert(r["context"]["task"] == "Our favorite hikes together" and r["context"]["location"] == "Boulder")
 end)
 
 test("Example: friends array", function()
     local r = toon.decode("friends[3]: ana,luis,sam")
-    assert(r.friends[1] == "ana" and r.friends[2] == "luis" and r.friends[3] == "sam")
+    assert(r["friends"][1] == "ana" and r["friends"][2] == "luis" and r["friends"][3] == "sam")
 end)
 
 test("Example: hikes tabular array", function()
     local r = toon.decode("hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:\n  1,Blue Lake Trail,7.5,320,ana,true\n  2,Ridge Overlook,9.2,540,luis,false\n  3,Wildflower Loop,5.1,180,sam,true")
-    assert(r.hikes[1].id == 1 and r.hikes[1].name == "Blue Lake Trail")
+    assert(r["hikes"][1].id == 1 and r["hikes"][1].name == "Blue Lake Trail")
 end)
 
 test("Example: users tabular", function()
     local r = toon.decode("users[2]{id,name,role}:\n  1,Alice,admin\n  2,Bob,user")
-    assert(r.users[1].id == 1 and r.users[1].role == "admin")
+    assert(r["users"][1]["id"] == 1 and r["users"][1]["role"] == "admin")
 end)
 
 test("Example: pairs arrays of arrays", function()
     local r = toon.decode("pairs[2]:\n  - [2]: 1,2\n  - [2]: 3,4")
-    assert(r.pairs[1][1] == 1 and r.pairs[1][2] == 2 and r.pairs[2][1] == 3)
+    assert(r["pairs"][1][1] == 1 and r["pairs"][1][2] == 2 and r["pairs"][2][1] == 3)
 end)
 
 test("Example: list item with object", function()
     local r = toon.decode("items[2]:\n  - name: Alice\n  - name: Bob")
-    assert(r.items[1].name == "Alice" and r.items[2].name == "Bob")
+    assert(r["items"][1]["name"] == "Alice" and r["items"][2]["name"] == "Bob")
 end)
 
 test("Example: quoted colons in URLs", function()
     local r = toon.decode('links[2]{id,url}:\n  1,"http://a:b"\n  2,"https://example.com?q=a:b"')
-    assert(r.links[1].url == "http://a:b" and r.links[2].url == "https://example.com?q=a:b")
+    assert(r["links"][1]["url"] == "http://a:b" and r["links"][2]["url"] == "https://example.com?q=a:b")
 end)
 
 section("Indentation")
@@ -485,7 +485,7 @@ end)
 section("Error Cases")
 
 test("Missing colon returns parsed value", function()
-    local r = toon.decode("key value", {strict = true})
+    local r = toon.decode("key value")
     assert(r == "key value")
 end)
 

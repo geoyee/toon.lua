@@ -61,6 +61,10 @@ local function needsQuoting(v, delim)
         (delim and v:find(delim, 1, true)) or v:sub(1,1) == "-"
 end
 
+-- ============================================================================
+-- ENCODER
+-- ============================================================================
+
 local encodeObject, encodeArray
 
 local function encodeValue(v, opts, delim)
