@@ -100,39 +100,7 @@ local function splitPath(path)
 end
 
 -- ============================================================================
--- SECTION 2: KEY ENCODING AND DECODING
--- Functions for handling key formatting (quoting, escaping).
--- ============================================================================
-
---- Encode a key for TOON output.
--- Quotes keys that contain special characters or are reserved words.
--- @param k (any) The key to encode.
--- @return (string) The encoded key.
-local function encodeKey(k)
-    if type(k) ~= "string" or k == "" then
-        return '"' .. tostring(k) .. '"'
-    end
-    
-    if k:find("[%.%s]") or not k:match("^[A-Za-z_][A-Za-z0-9_]*$") then
-        return '"' .. k .. '"'
-    end
-    
-    return k
-end
-
---- Decode a key from TOON input.
--- Handles quoted and unquoted keys.
--- @param kp (string) The key part from parsing.
--- @return (string) The decoded key.
-local function decodeKey(kp)
-    if kp:sub(1, 1) == '"' and kp:sub(-1) == '"' then
-        return unescapeString(kp:sub(2, -2))
-    end
-    return kp
-end
-
--- ============================================================================
--- SECTION 3: STRING ESCAPING AND UNESCAPING
+-- SECTION 2: STRING ESCAPING AND UNESCAPING
 -- Handle special character escaping for strings.
 -- ============================================================================
 
@@ -190,6 +158,38 @@ local function unescapeString(s)
     :gsub("\\t", "\t")
     :gsub('\\"', '"')
     :gsub("\\\\", "\\"))
+end
+
+-- ============================================================================
+-- SECTION 3: KEY ENCODING AND DECODING
+-- Functions for handling key formatting (quoting, escaping).
+-- ============================================================================
+
+--- Decode a key from TOON input.
+-- Handles quoted and unquoted keys.
+-- @param kp (string) The key part from parsing.
+-- @return (string) The decoded key.
+local function decodeKey(kp)
+    if kp:sub(1, 1) == '"' and kp:sub(-1) == '"' then
+        return unescapeString(kp:sub(2, -2))
+    end
+    return kp
+end
+
+--- Encode a key for TOON output.
+-- Quotes keys that contain special characters or are reserved words.
+-- @param k (any) The key to encode.
+-- @return (string) The encoded key.
+local function encodeKey(k)
+    if type(k) ~= "string" or k == "" then
+        return '"' .. tostring(k) .. '"'
+    end
+    
+    if k:find("[%.%s]") or not k:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+        return '"' .. k .. '"'
+    end
+    
+    return k
 end
 
 -- ============================================================================
