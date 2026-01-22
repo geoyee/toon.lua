@@ -126,7 +126,7 @@ end
 -- @return (string) The decoded key.
 local function decodeKey(kp)
     if kp:sub(1, 1) == '"' and kp:sub(-1) == '"' then
-        return kp:sub(2, -2)
+        return unescapeString(kp:sub(2, -2))
     end
     return kp
 end
@@ -535,7 +535,7 @@ function encodeArray(a, lvl, opts, delim)
             
             for _, k in ipairs(keys) do
                 local vt = type(item[k])
-                if not item[k] or (vt ~= "string" and vt ~= "number" and vt ~= "boolean") then
+                if vt == "table" or vt == "function" or vt == "userdata" then
                     hasNonPrimitive = true
                     break
                 end
@@ -753,7 +753,7 @@ local function parseArrayHeader(line)
             for field in fieldContent:gmatch("[^,]+") do
                 local f = trim(field)
                 if f:sub(1, 1) == '"' and f:sub(-1) == '"' then
-                    f = f:sub(2, -2)
+                    f = unescapeString(f:sub(2, -2))
                 end
                 fields[#fields + 1] = f
             end
@@ -841,6 +841,7 @@ local function decodeObject(lines, startDepth, opts)
         
         if line == "" then
             i = i + 1
+            goto continue
         end
         
         local depth = countSpaces(line)
@@ -854,6 +855,7 @@ local function decodeObject(lines, startDepth, opts)
             if depth < startDepth then return result end
             result[#result + 1] = parseListItem(content)
             i = i + 1
+            goto continue
         end
         
         local header = parseArrayHeader(content)
@@ -957,6 +959,8 @@ local function decodeObject(lines, startDepth, opts)
                 i = i + 1
             end
         end
+        
+        ::continue::
     end
     
     return result
