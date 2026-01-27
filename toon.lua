@@ -4,7 +4,7 @@
 local toon = {}
 
 -- ============================================================================
--- SECTION 1: UTILITY FUNCTIONS
+-- UTILITY FUNCTIONS
 -- General purpose utilities used throughout the module.
 -- ============================================================================
 
@@ -100,7 +100,7 @@ local function splitPath(path)
 end
 
 -- ============================================================================
--- SECTION 2: STRING ESCAPING AND UNESCAPING
+-- STRING ESCAPING AND UNESCAPING
 -- Handle special character escaping for strings.
 -- ============================================================================
 
@@ -161,7 +161,7 @@ local function unescapeString(s)
 end
 
 -- ============================================================================
--- SECTION 3: KEY ENCODING AND DECODING
+-- KEY ENCODING AND DECODING
 -- Functions for handling key formatting (quoting, escaping).
 -- ============================================================================
 
@@ -193,7 +193,7 @@ local function encodeKey(k)
 end
 
 -- ============================================================================
--- SECTION 4: NUMBER FORMATTING
+-- NUMBER FORMATTING
 -- Handle number to string conversion for TOON output.
 -- Optimized to minimize gsub calls.
 -- ============================================================================
@@ -224,7 +224,7 @@ local function formatNumber(n)
 end
 
 -- ============================================================================
--- SECTION 5: VALUE PARSING AND ENCODING
+-- VALUE PARSING AND ENCODING
 -- Parse and encode individual values.
 -- ============================================================================
 
@@ -268,7 +268,7 @@ local function needsQuoting(v, delim)
 end
 
 -- ============================================================================
--- SECTION 6: DELIMITER HANDLING
+-- DELIMITER HANDLING
 -- Manage array delimiters for encoding and decoding.
 -- ============================================================================
 
@@ -291,7 +291,7 @@ local function getDelimiterMark(delim)
 end
 
 -- ============================================================================
--- SECTION 7: PATH EXPANSION
+-- PATH EXPANSION
 -- Handle dotted path expansion during decoding.
 -- ============================================================================
 
@@ -320,7 +320,7 @@ local function setNestedValue(t, path, value, pathParts)
 end
 
 -- ============================================================================
--- SECTION 8: KEY FOLDING
+-- KEY FOLDING
 -- Handle key folding during encoding (nested keys to dotted notation).
 -- Implemented iteratively to avoid stack overflow on deep nesting.
 -- ============================================================================
@@ -398,7 +398,7 @@ local function getNestedValue(v, path, pathParts)
 end
 
 -- ============================================================================
--- SECTION 9: ENCODER - HELPER FUNCTIONS
+-- ENCODER - HELPER FUNCTIONS
 -- Forward declarations and helper functions for encoding.
 -- ============================================================================
 
@@ -644,7 +644,7 @@ function encodeObject(o, lvl, opts, delim)
 end
 
 -- ============================================================================
--- SECTION 10: MAIN ENCODER FUNCTION
+-- MAIN ENCODER FUNCTION
 -- Public API for encoding.
 -- ============================================================================
 
@@ -705,7 +705,7 @@ function toon.encode(data, opts)
 end
 
 -- ============================================================================
--- SECTION 11: DECODER - PARSING FUNCTIONS
+-- DECODER - PARSING FUNCTIONS
 -- Parsing functions for TOON input.
 -- ============================================================================
 
@@ -820,7 +820,7 @@ local function parseTabularRow(line, fields, delimiter)
 end
 
 -- ============================================================================
--- SECTION 12: DECODER - OBJECT DECODING
+-- DECODER - OBJECT DECODING
 -- Main decoding logic for objects.
 -- ============================================================================
 
@@ -983,7 +983,7 @@ local function parseLines(text)
 end
 
 -- ============================================================================
--- SECTION 13: MAIN DECODER FUNCTION
+-- MAIN DECODER FUNCTION
 -- Public API for decoding.
 -- ============================================================================
 
