@@ -49,7 +49,7 @@ test("Boolean false encoding", function()
 end)
 
 -- Section 2: Data Model - Null represented as the literal null
--- Section 3: Encoding Normalization - undefined/unsupported types → null
+-- Section 3: Encoding Normalization - undefined/unsupported types -> null
 -- Note: Lua tables cannot store nil values, so null encoding requires special handling
 test("Null value decoding", function()
     local r = toon.decode("val: null")
@@ -71,21 +71,21 @@ test("Number decoding", function()
 end)
 
 -- Section 4: Decoding Interpretation - Unquoted value tokens
--- true → boolean true
+-- true -> boolean true
 test("Boolean true decoding", function()
     local r = toon.decode("flag: true")
     assert(r["flag"] == true)
 end)
 
 -- Section 4: Decoding Interpretation - Unquoted value tokens
--- false → boolean false
+-- false -> boolean false
 test("Boolean false decoding", function()
     local r = toon.decode("flag: false")
     assert(r["flag"] == false)
 end)
 
 -- Section 4: Decoding Interpretation - Unquoted value tokens
--- null → null/nil
+-- null -> null/nil
 test("Null detection", function()
     local r = toon.decode("val: null")
     assert(r["val"] == nil)
@@ -136,22 +136,22 @@ test("String with colon quoted", function()
     assert(toon.encode({url = "http://example.com"}) == 'url: "http://example.com"')
 end)
 
--- Section 7.1: Escaping - In quoted strings, \" → \\\"
+-- Section 7.1: Escaping - In quoted strings, \" -> \\\"
 test("String with quotes escaped", function()
     assert(toon.encode({quoted = 'say "hello"'}) == 'quoted: "say \\"hello\\""')
 end)
 
--- Section 7.1: Escaping - In quoted strings, \\ → \\\\
+-- Section 7.1: Escaping - In quoted strings, \\ -> \\\\
 test("String with backslash escaped", function()
     assert(toon.encode({path = "C:\\Users"}) == 'path: "C:\\\\Users"')
 end)
 
--- Section 7.1: Escaping - U+000A newline → \\n
+-- Section 7.1: Escaping - U+000A newline -> \\n
 test("String with newline escaped", function()
     assert(toon.encode({multiline = "line1\nline2"}) == 'multiline: "line1\\nline2"')
 end)
 
--- Section 7.1: Escaping - U+0009 tab → \\t
+-- Section 7.1: Escaping - U+0009 tab -> \\t
 test("String with tab escaped", function()
     assert(toon.encode({tabbed = "a\tb"}) == 'tabbed: "a\\tb"')
 end)
@@ -208,19 +208,19 @@ test("Negative zero normalized", function()
 end)
 
 -- Section 3: Encoding Normalization - Number
--- NaN → null
+-- NaN -> null
 test("NaN encoded as null", function()
     assert(toon.encode({nan = 0/0}) == "nan: null")
 end)
 
 -- Section 3: Encoding Normalization - Number
--- +Infinity → null
+-- +Infinity -> null
 test("Infinity encoded as null", function()
     assert(toon.encode({inf = math.huge}) == "inf: null")
 end)
 
 -- Section 3: Encoding Normalization - Number
--- -Infinity → null
+-- -Infinity -> null
 test("Negative infinity encoded as null", function()
     assert(toon.encode({neginf = -math.huge}) == "neginf: null")
 end)
@@ -234,7 +234,7 @@ end)
 
 -- Section 4: Decoding Interpretation - Numeric parsing
 -- Decoders MUST treat tokens with forbidden leading zeros as strings
--- Example from spec: `"05"` → string, not number
+-- Example from spec: `"05"` -> string, not number
 test("Decode leading-zero number as string", function()
     local r = toon.decode('num: "05"')
     assert(r["num"] == "05")
@@ -242,7 +242,7 @@ end)
 
 -- Section 4: Decoding Interpretation - Numeric parsing
 -- Decoders MUST accept exponent forms (e.g., 1e-6, -1E+9)
--- Example from spec: `"-1E+03"` → numeric value `-1000`
+-- Example from spec: `"-1E+03"` -> numeric value `-1000`
 test("Decode scientific notation", function()
     local r = toon.decode("num: 1e-6")
     assert(r["num"] == 0.000001)
@@ -566,7 +566,7 @@ test("Empty array at root", function()
     assert(toon.encode({items = emptyArr}) == "items[0]:")
 end)
 
--- Section 7.1: Escaping - \" → \\\" in encoding, \\\" → \" in decoding
+-- Section 7.1: Escaping - \" -> \\\" in encoding, \\\" -> \" in decoding
 test("Array with escaped quotes", function()
     local r = toon.decode('items[2]: "value \\"with quotes\\"", another')
     assert(r["items"][1] == 'value "with quotes"' and r["items"][2] == "another")
