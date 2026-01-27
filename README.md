@@ -14,7 +14,7 @@ cp toon.lua /path/to/your/project/
 local toon = require("toon")
 ```
 
-### Encode (Lua → TOON)
+### Encode (Lua -> TOON)
 
 ```lua
 local data = {
@@ -38,7 +38,7 @@ metadata:
   version: 1.0
 ```
 
-### Decode (TOON → Lua)
+### Decode (TOON -> Lua)
 
 ```lua
 local input = [[
