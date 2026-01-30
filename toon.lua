@@ -1,7 +1,7 @@
 -- toon.lua - TOON (Typed Object Notation) parser for Lua
 -- https://toonformat.dev/
 
-local toon = {}
+local toon = {version = "0.1.0"}
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
