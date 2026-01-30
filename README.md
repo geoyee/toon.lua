@@ -92,3 +92,7 @@ toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
 --   1,A
 --   2,B
 ```
+
+## Example
+
+Along with [json.lua](https://github.com/rxi/json.lua.git), implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
