@@ -1,6 +1,6 @@
 # toon.lua
 
-A lightweight [TOON](https://toonformat.dev/) parser for Lua.
+A lightweight [TOON](spec) parser for Lua.
 
 ## Install
 
@@ -76,6 +76,23 @@ Options:
 - `strict` (boolean): strict parsing mode (default: false)
 - `pathExpansion` (boolean): expand dotted keys into nested tables (default: false)
 
+## Array Formats
+
+**Inline arrays:**
+
+```lua
+toon.encode({tags = {"a", "b"}})  -- tags[2]: a,b
+```
+
+**Tabular arrays:**
+
+```lua
+toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
+-- users[2]{id,name}:
+--   1,A
+--   2,B
+```
+
 ## Example
 
-Along with **json.lua**, implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
+Along with [json.lua](json.lua), implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
