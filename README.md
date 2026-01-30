@@ -1,6 +1,6 @@
 # toon.lua
 
-A lightweight [TOON](spec) parser for Lua.
+A lightweight [TOON](https://toonformat.dev/) parser for Lua.
 
 ## Install
 
@@ -95,4 +95,4 @@ toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
 
 ## Example
 
-Along with [json.lua](json.lua), implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
+Along with [json.lua](https://github.com/rxi/json.lua.git), implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
