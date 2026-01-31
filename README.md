@@ -93,6 +93,24 @@ toon.encode({users = {{id = 1, name = "A"}, {id = 2, name = "B"}}})
 --   2,B
 ```
 
+## Test
+
+> Test case generation and final validation modifications both utilize AI-assisted technology (MiniMax M2.1), which may result in certain edge cases not being fully covered.
+
+These tests were generated based on the [TOON specification](https://github.com/toon-format/spec.git).
+
+```bash
+lua test.lua
+```
+
 ## Example
 
-Along with [json.lua](https://github.com/rxi/json.lua.git), implement mutual conversion between JSON and Toon, refer to [example.lua](example.lua).
+This example demonstrates mutual conversion between TOON and JSON using [json.lua](https://github.com/rxi/json.lua.git), following the conversion examples in the [TOON examples](https://github.com/toon-format/spec/tree/main/examples/conversions).
+
+```bash
+lua example.lua
+```
+
+## Other
+
+Code review was performed using AI-assisted tools (gemini-code-assist), with modifications made based on its suggestions.

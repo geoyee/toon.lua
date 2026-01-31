@@ -27,25 +27,25 @@ section("Primitive Types")
 -- Section 7.2: Quoting Rules for String Values
 -- Unquoted strings are allowed when they don't match special patterns
 test("String encoding", function()
-    assert(toon.encode({test = "hello"}) == "test: hello")
+    assert(toon.encode({ test = "hello" }) == "test: hello")
 end)
 
 -- Section 2: Data Model - Numbers (canonical decimal form)
 -- Encoders MUST emit numbers in canonical decimal form
 test("Number encoding", function()
-    assert(toon.encode({num = 42}) == "num: 42")
+    assert(toon.encode({ num = 42 }) == "num: 42")
 end)
 
 -- Section 2: Data Model - Primitive types include boolean
 -- Section 3: Encoding Normalization - No special normalization for booleans
 test("Boolean true encoding", function()
-    assert(toon.encode({val = true}) == "val: true")
+    assert(toon.encode({ val = true }) == "val: true")
 end)
 
 -- Section 2: Data Model - Primitive types include boolean
 -- Section 3: Encoding Normalization - No special normalization for booleans
 test("Boolean false encoding", function()
-    assert(toon.encode({val = false}) == "val: false")
+    assert(toon.encode({ val = false }) == "val: false")
 end)
 
 -- Section 2: Data Model - Null represented as the literal null
@@ -96,76 +96,76 @@ section("String Quoting and Escaping")
 -- Section 7.2: Quoting Rules for String Values
 -- Empty strings MUST be quoted
 test("Empty string quoting", function()
-    assert(toon.encode({empty = ""}) == 'empty: ""')
+    assert(toon.encode({ empty = "" }) == 'empty: ""')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings with leading or trailing whitespace MUST be quoted
 test("String with leading/trailing whitespace", function()
-    assert(toon.encode({ws = "  hello  "}) == 'ws: "  hello  "')
+    assert(toon.encode({ ws = "  hello  " }) == 'ws: "  hello  "')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings equal to "true", "false", or "null" (case-sensitive) MUST be quoted
 test("String matching 'true' quoted", function()
-    assert(toon.encode({val = "true"}) == 'val: "true"')
+    assert(toon.encode({ val = "true" }) == 'val: "true"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings equal to "true", "false", or "null" (case-sensitive) MUST be quoted
 test("String matching 'false' quoted", function()
-    assert(toon.encode({val = "false"}) == 'val: "false"')
+    assert(toon.encode({ val = "false" }) == 'val: "false"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings equal to "true", "false", or "null" (case-sensitive) MUST be quoted
 test("String matching 'null' quoted", function()
-    assert(toon.encode({val = "null"}) == 'val: "null"')
+    assert(toon.encode({ val = "null" }) == 'val: "null"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Numeric-like strings MUST be quoted
 -- Matches /^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$/i
 test("Numeric string quoted", function()
-    assert(toon.encode({val = "42"}) == 'val: "42"')
+    assert(toon.encode({ val = "42" }) == 'val: "42"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings containing a colon (:) MUST be quoted
 test("String with colon quoted", function()
-    assert(toon.encode({url = "http://example.com"}) == 'url: "http://example.com"')
+    assert(toon.encode({ url = "http://example.com" }) == 'url: "http://example.com"')
 end)
 
 -- Section 7.1: Escaping - In quoted strings, \" -> \\\"
 test("String with quotes escaped", function()
-    assert(toon.encode({quoted = 'say "hello"'}) == 'quoted: "say \\"hello\\""')
+    assert(toon.encode({ quoted = 'say "hello"' }) == 'quoted: "say \\"hello\\""')
 end)
 
 -- Section 7.1: Escaping - In quoted strings, \\ -> \\\\
 test("String with backslash escaped", function()
-    assert(toon.encode({path = "C:\\Users"}) == 'path: "C:\\\\Users"')
+    assert(toon.encode({ path = "C:\\Users" }) == 'path: "C:\\\\Users"')
 end)
 
 -- Section 7.1: Escaping - U+000A newline -> \\n
 test("String with newline escaped", function()
-    assert(toon.encode({multiline = "line1\nline2"}) == 'multiline: "line1\\nline2"')
+    assert(toon.encode({ multiline = "line1\nline2" }) == 'multiline: "line1\\nline2"')
 end)
 
 -- Section 7.1: Escaping - U+0009 tab -> \\t
 test("String with tab escaped", function()
-    assert(toon.encode({tabbed = "a\tb"}) == 'tabbed: "a\\tb"')
+    assert(toon.encode({ tabbed = "a\tb" }) == 'tabbed: "a\\tb"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings starting with "-" (any hyphen at position 0) MUST be quoted
 test("String starting with hyphen quoted", function()
-    assert(toon.encode({dash = "-start"}) == 'dash: "-start"')
+    assert(toon.encode({ dash = "-start" }) == 'dash: "-start"')
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings containing brackets or braces ([, ], {, }) MUST be quoted
 test("String with brackets quoted", function()
-    assert(toon.encode({arr = "[1,2,3]"}) == 'arr: "[1,2,3]"')
+    assert(toon.encode({ arr = "[1,2,3]" }) == 'arr: "[1,2,3]"')
 end)
 
 -- Section 7.1: Escaping - Decoders MUST unescape quoted strings
@@ -180,49 +180,49 @@ section("Number Formatting")
 -- Section 2: Data Model - Numbers in canonical decimal form
 -- No exponent notation, no leading zeros except "0"
 test("Integer formatting", function()
-    assert(toon.encode({num = 42}) == "num: 42")
+    assert(toon.encode({ num = 42 }) == "num: 42")
 end)
 
 -- Section 2: Data Model - Numbers in canonical decimal form
 -- No trailing zeros in fractional part
 test("Float without trailing zeros", function()
-    assert(toon.encode({num = 1.5}) == "num: 1.5")
+    assert(toon.encode({ num = 1.5 }) == "num: 1.5")
 end)
 
 -- Section 2: Data Model - Numbers in canonical decimal form
 -- Trailing zeros in fractional part MUST be removed
 test("Float with trailing zeros normalized", function()
-    assert(toon.encode({num = 1.50}) == "num: 1.5")
+    assert(toon.encode({ num = 1.50 }) == "num: 1.5")
 end)
 
 -- Section 2: Data Model - Numbers in canonical decimal form
 -- If fractional part is zero after normalization, emit as integer
 test("Integer float normalized", function()
-    assert(toon.encode({num = 1.0}) == "num: 1")
+    assert(toon.encode({ num = 1.0 }) == "num: 1")
 end)
 
 -- Section 2: Data Model - Numbers in canonical decimal form
 -- -0 MUST be normalized to 0
 test("Negative zero normalized", function()
-    assert(toon.encode({negzero = -0}) == "negzero: 0")
+    assert(toon.encode({ negzero = -0 }) == "negzero: 0")
 end)
 
 -- Section 3: Encoding Normalization - Number
 -- NaN -> null
 test("NaN encoded as null", function()
-    assert(toon.encode({nan = 0/0}) == "nan: null")
+    assert(toon.encode({ nan = 0 / 0 }) == "nan: null")
 end)
 
 -- Section 3: Encoding Normalization - Number
 -- +Infinity -> null
 test("Infinity encoded as null", function()
-    assert(toon.encode({inf = math.huge}) == "inf: null")
+    assert(toon.encode({ inf = math.huge }) == "inf: null")
 end)
 
 -- Section 3: Encoding Normalization - Number
 -- -Infinity -> null
 test("Negative infinity encoded as null", function()
-    assert(toon.encode({neginf = -math.huge}) == "neginf: null")
+    assert(toon.encode({ neginf = -math.huge }) == "neginf: null")
 end)
 
 -- Section 4: Decoding Interpretation - Numeric parsing
@@ -260,37 +260,37 @@ section("Key Encoding")
 -- Section 7.3: Key Encoding - Keys MAY be unquoted if they match:
 -- ^[A-Za-z_][A-Za-z0-9_.]*$
 test("Simple unquoted key", function()
-    assert(toon.encode({simpleKey = "value"}):find("^simpleKey:"))
+    assert(toon.encode({ simpleKey = "value" }):find("^simpleKey:"))
 end)
 
 -- Section 7.3: Key Encoding - Keys MAY be unquoted if they match pattern
 -- Underscore is allowed in unquoted keys
 test("Key with underscore", function()
-    assert(toon.encode({my_key = "value"}):find("^my_key:"))
+    assert(toon.encode({ my_key = "value" }):find("^my_key:"))
 end)
 
 -- Section 7.3: Key Encoding - Dots are allowed in unquoted keys
 -- But note: dots don't require quoting per pattern
 test("Key with dots", function()
-    assert(toon.encode({["user.name"] = "value"}) == '"user.name": value')
+    assert(toon.encode({ ["user.name"] = "value" }) == '"user.name": value')
 end)
 
 -- Section 7.3: Key Encoding - Keys starting with digit MUST be quoted
 -- Pattern requires first character to be A-Z, a-z, or _
 test("Key starting with digit quoted", function()
-    assert(toon.encode({["123key"] = "value"}) == '"123key": value')
+    assert(toon.encode({ ["123key"] = "value" }) == '"123key": value')
 end)
 
 -- Section 7.3: Key Encoding - Keys containing hyphen MUST be quoted
 -- Hyphen is not in allowed character set for unquoted keys
 test("Key with hyphen", function()
-    assert(toon.encode({["my-key"] = "value"}) == '"my-key": value')
+    assert(toon.encode({ ["my-key"] = "value" }) == '"my-key": value')
 end)
 
 -- Section 7.3: Key Encoding - Keys with spaces MUST be quoted
 -- Spaces are not in allowed character set for unquoted keys
 test("Key with spaces", function()
-    assert(toon.encode({["key with spaces"] = "value"}) == '"key with spaces": value')
+    assert(toon.encode({ ["key with spaces"] = "value" }) == '"key with spaces": value')
 end)
 
 -- Section 7.4: Decoding Rules for Strings and Keys
@@ -312,15 +312,15 @@ section("Object Encoding and Decoding")
 -- Section 8: Objects - Primitive fields: key: value (single space after colon)
 -- Section 2: Data Model - Object key order MUST be preserved
 test("Simple object", function()
-    local result = toon.encode({id = 123, name = "Ada", active = true})
-    assert(result:find("id: 123") and result:find("name: Ada") and result:find("active: true"))
+    local result = toon.encode({ id = 123, name = "Ada", active = true })
+    assert(result ~= nil and result:find("id: 123") and result:find("name: Ada") and result:find("active: true"))
 end)
 
 -- Section 8: Objects - Nested objects: key: on its own line
 -- Nested fields appear at depth +1
 test("Nested object", function()
-    local result = toon.encode({user = {id = 123, name = "Ada"}})
-    assert(result:find("^user:") and result:find("  id: 123") and result:find("  name: Ada"))
+    local result = toon.encode({ user = { id = 123, name = "Ada" } })
+    assert(result ~= nil and result:find("^user:") and result:find("  id: 123") and result:find("  name: Ada"))
 end)
 
 -- Section 8: Objects - Deep nesting with consistent indentation
@@ -330,12 +330,13 @@ test("Deeply nested object", function()
         root = {
             level1 = {
                 level2 = {
-                    level3 = {value = "deep"}
+                    level3 = { value = "deep" }
                 }
             }
         }
     })
-    assert(result:find("root:") and result:find("  level1:") and result:find("    level2:") and result:find("      level3:") and result:find("        value: deep"))
+    assert(result ~= nil and result:find("root:") and result:find("  level1:") and result:find("    level2:") and
+        result:find("      level3:") and result:find("        value: deep"))
 end)
 
 -- Section 8: Objects - Decoding nested objects
@@ -348,7 +349,7 @@ end)
 -- Section 8: Objects - Empty objects: key: alone
 -- Note: In Lua, empty table {} is treated as object. Use setmetatable({}, {n=0}) for empty arrays
 test("Empty object", function()
-    assert(toon.encode({empty = {}}) == "empty:")
+    assert(toon.encode({ empty = {} }) == "empty:")
 end)
 
 -- Section 8: Objects - An empty object at root yields empty document
@@ -359,10 +360,12 @@ end)
 -- Section 2: Data Model - Object key order MUST be preserved as encountered
 -- Section 8: Objects - Key order: Implementations MUST preserve encounter order
 test("Key order preserved", function()
-    local result = toon.encode({z_key = 1, a_key = 2, m_key = 3})
+    local result = toon.encode({ z_key = 1, a_key = 2, m_key = 3 })
     local lines = {}
-    for line in result:gmatch("[^\n]+") do
-        table.insert(lines, line)
+    if result ~= nil then
+        for line in result:gmatch("[^\n]+") do
+            table.insert(lines, line)
+        end
     end
     assert(#lines == 3)
     assert(lines[1]:find("z_key") or lines[2]:find("z_key") or lines[3]:find("z_key"))
@@ -374,32 +377,32 @@ section("Inline Array Encoding")
 
 -- Section 9.1: Primitive Arrays (Inline) - key[N]: v1,v2,...
 test("Inline string array", function()
-    assert(toon.encode({tags = {"admin", "ops", "dev"}}) == "tags[3]: admin,ops,dev")
+    assert(toon.encode({ tags = { "admin", "ops", "dev" } }) == "tags[3]: admin,ops,dev")
 end)
 
 -- Section 9.1: Primitive Arrays (Inline) - Non-empty arrays
 test("Inline number array", function()
-    assert(toon.encode({nums = {1, 2, 3}}) == "nums[3]: 1,2,3")
+    assert(toon.encode({ nums = { 1, 2, 3 } }) == "nums[3]: 1,2,3")
 end)
 
 -- Section 9.1: Primitive Arrays (Inline) - Mixed primitive types
 test("Inline mixed array", function()
-    local result = toon.encode({mixed = {1, "two", true}})
-    assert(result:find("mixed%[3%]:") and result:find("1,two,true"))
+    local result = toon.encode({ mixed = { 1, "two", true } })
+    assert(result ~= nil and result:find("mixed%[3%]:") and result:find("1,two,true"))
 end)
 
 -- Section 9.1: Primitive Arrays (Inline) - Empty arrays: key[0]:
 -- Note: Empty Lua table {} is treated as object. Use setmetatable({}, {n=0}) for empty arrays
 test("Empty inline array", function()
-    local emptyArr = setmetatable({}, {n = 0})
-    assert(toon.encode({items = emptyArr}) == "items[0]:")
+    local emptyArr = setmetatable({}, { n = 0 })
+    assert(toon.encode({ items = emptyArr }) == "items[0]:")
 end)
 
 -- Section 7.2: Quoting Rules for String Values
 -- Strings containing the active delimiter MUST be quoted
 test("Array with delimiter in value", function()
-    local result = toon.encode({vals = {"a,b", "c"}})
-    assert(result:find('"a,b"') and result:find("c"))
+    local result = toon.encode({ vals = { "a,b", "c" } })
+    assert(result ~= nil and result:find('"a,b"') and result:find("c"))
 end)
 
 -- Section 9.1: Primitive Arrays (Inline) - Decoding
@@ -417,11 +420,12 @@ section("Tabular Array Encoding")
 test("Tabular array basic", function()
     local result = toon.encode({
         items = {
-            {id = 1, name = "A", qty = 2},
-            {id = 2, name = "B", qty = 1}
+            { id = 1, name = "A", qty = 2 },
+            { id = 2, name = "B", qty = 1 }
         }
     })
-    assert(result:find("items%[2%]{id,name,qty}:") and result:find("  1,A,2") and result:find("  2,B,1"))
+    assert(result ~= nil and result:find("items%[2%]{id,name,qty}:") and result:find("  1,A,2") and
+        result:find("  2,B,1"))
 end)
 
 -- Section 9.3: Arrays of Objects — Tabular Form
@@ -429,11 +433,11 @@ end)
 test("Tabular array with string values requiring quotes", function()
     local result = toon.encode({
         items = {
-            {id = 1, name = "Hello, World"},
-            {id = 2, name = "Test"}
+            { id = 1, name = "Hello, World" },
+            { id = 2, name = "Test" }
         }
     })
-    assert(result:find('{id,name}:') and result:find('1,"Hello, World"') and result:find("  2,Test"))
+    assert(result ~= nil and result:find('{id,name}:') and result:find('1,"Hello, World"') and result:find("  2,Test"))
 end)
 
 -- Section 9.3: Arrays of Objects — Tabular Form
@@ -441,12 +445,13 @@ end)
 test("Tabular array encoding with ordered keys", function()
     local result = toon.encode({
         items = {
-            {z = 1, a = 2, m = 3},
-            {z = 4, a = 5, m = 6}
+            { z = 1, a = 2, m = 3 },
+            { z = 4, a = 5, m = 6 }
         }
     })
+    assert(result ~= nil)
     assert(result:find("%[2%]{a,m,z}:") or result:find("%[2%]{a,z,m}:") or result:find("%[2%]{z,a,m}:") or
-           result:find("%[2%]{z,m,a}:") or result:find("%[2%]{m,a,z}:") or result:find("%[2%]{m,z,a}:"))
+        result:find("%[2%]{z,m,a}:") or result:find("%[2%]{m,a,z}:") or result:find("%[2%]{m,z,a}:"))
 end)
 
 -- Section 9.3: Arrays of Objects — Tabular Form - Decoding
@@ -463,12 +468,13 @@ section("Expanded Array (List Items)")
 test("Tabular array of objects (same keys)", function()
     local result = toon.encode({
         items = {
-            {val = 1},
-            {val = 2},
-            {val = 3}
+            { val = 1 },
+            { val = 2 },
+            { val = 3 }
         }
     })
-    assert(result:find("items%[3%]{val}:") and result:find("  1") and result:find("  2") and result:find("  3"))
+    assert(result ~= nil and result:find("items%[3%]{val}:") and result:find("  1") and result:find("  2") and
+        result:find("  3"))
 end)
 
 -- Section 9.4: Mixed / Non-Uniform Arrays — Expanded List
@@ -476,11 +482,11 @@ end)
 test("Tabular array of objects encoding", function()
     local result = toon.encode({
         users = {
-            {id = 1, name = "Alice"},
-            {id = 2, name = "Bob"}
+            { id = 1, name = "Alice" },
+            { id = 2, name = "Bob" }
         }
     })
-    assert(result:find("users%[2%]{id,name}:") and result:find("  1,Alice") and result:find("  2,Bob"))
+    assert(result ~= nil and result:find("users%[2%]{id,name}:") and result:find("  1,Alice") and result:find("  2,Bob"))
 end)
 
 -- Section 9.4: Mixed / Non-Uniform Arrays — Expanded List
@@ -488,12 +494,12 @@ end)
 test("Mixed array (different keys)", function()
     local result = toon.encode({
         mixed = {
-            {val = 1},
-            {name = "test"},
-            {val = "text"}
+            { val = 1 },
+            { name = "test" },
+            { val = "text" }
         }
     })
-    assert(result:find("mixed%[3%]:") and result:find("  %- val: 1") and result:find("  %- name: test"))
+    assert(result ~= nil and result:find("mixed%[3%]:") and result:find("  %- val: 1") and result:find("  %- name: test"))
 end)
 
 -- Section 9.4: Mixed / Non-Uniform Arrays — Expanded List - Decoding
@@ -507,15 +513,15 @@ section("Delimiter Variations")
 -- Section 6: Header Syntax - Tab delimiter in brackets: [N<TAB>]
 -- Section 11: Delimiters - Tab delimiter uses HTAB inside brackets
 test("Tab delimiter in array", function()
-    local result = toon.encode({items = {1, 2, 3}}, {delimiter = "tab"})
-    assert(result:find("items%[3.]:") and result:find("\t") and not result:find(","))
+    local result = toon.encode({ items = { 1, 2, 3 } }, { delimiter = "tab" })
+    assert(result ~= nil and result:find("items%[3.]:") and result:find("\t") and not result:find(","))
 end)
 
 -- Section 6: Header Syntax - Pipe delimiter in brackets: [N|]
 -- Section 11: Delimiters - Pipe delimiter
 test("Pipe delimiter in array", function()
-    local result = toon.encode({items = {1, 2, 3}}, {delimiter = "pipe"})
-    assert(result:find("items%[3%|]:") and result:find("|") and not result:find(","))
+    local result = toon.encode({ items = { 1, 2, 3 } }, { delimiter = "pipe" })
+    assert(result ~= nil and result:find("items%[3%|]:") and result:find("|") and not result:find(","))
 end)
 
 -- Section 9.3: Arrays of Objects — Tabular Form
@@ -523,11 +529,11 @@ end)
 test("Tab delimiter in tabular array", function()
     local result = toon.encode({
         items = {
-            {id = 1, name = "A"},
-            {id = 2, name = "B"}
+            { id = 1, name = "A" },
+            { id = 2, name = "B" }
         }
-    }, {delimiter = "tab"})
-    assert(result:find("items%[2.]{id\tname}:") and result:find("\t") and not result:find(","))
+    }, { delimiter = "tab" })
+    assert(result ~= nil and result:find("items%[2.]{id\tname}:") and result:find("\t") and not result:find(","))
 end)
 
 -- Section 11: Delimiters - Decoding Rules
@@ -549,7 +555,7 @@ section("Edge Cases")
 -- Section 2: Data Model - Numbers
 -- Large numbers should be emitted in canonical decimal form
 test("Large numbers", function()
-    assert(toon.encode({bignum = 9007199254740992}) == "bignum: 9007199254740992")
+    assert(toon.encode({ bignum = 9007199254740992 }) == "bignum: 9007199254740992")
 end)
 
 -- Section 4: Decoding Interpretation - Numeric parsing
@@ -562,8 +568,8 @@ end)
 -- Section 9.1: Primitive Arrays (Inline) - Empty arrays
 -- Note: Empty Lua table {} is treated as object. Use setmetatable({}, {n=0}) for empty arrays
 test("Empty array at root", function()
-    local emptyArr = setmetatable({}, {n = 0})
-    assert(toon.encode({items = emptyArr}) == "items[0]:")
+    local emptyArr = setmetatable({}, { n = 0 })
+    assert(toon.encode({ items = emptyArr }) == "items[0]:")
 end)
 
 -- Section 7.1: Escaping - \" -> \\\" in encoding, \\\" -> \" in decoding
@@ -624,7 +630,8 @@ section("Specification Examples")
 -- Appendix A: Examples (Informative) - Context object example
 test("Example: context object", function()
     local r = toon.decode("context:\n  task: Our favorite hikes together\n  location: Boulder\n  season: spring_2025")
-    assert(r["context"]["task"] == "Our favorite hikes together" and r["context"]["location"] == "Boulder" and r["context"]["season"] == "spring_2025")
+    assert(r["context"]["task"] == "Our favorite hikes together" and r["context"]["location"] == "Boulder" and
+        r["context"]["season"] == "spring_2025")
 end)
 
 -- Appendix A: Examples (Informative) - Friends array example
@@ -635,10 +642,12 @@ end)
 
 -- Appendix A: Examples (Informative) - Hikes tabular array example
 test("Example: hikes tabular array", function()
-    local r = toon.decode("hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:\n  1,Blue Lake Trail,7.5,320,ana,true\n  2,Ridge Overlook,9.2,540,luis,false\n  3,Wildflower Loop,5.1,180,sam,true")
+    local r = toon.decode(
+        "hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:\n  1,Blue Lake Trail,7.5,320,ana,true\n  2,Ridge Overlook,9.2,540,luis,false\n  3,Wildflower Loop,5.1,180,sam,true")
     assert(r["hikes"][1]["id"] == 1 and r["hikes"][1]["name"] == "Blue Lake Trail" and r["hikes"][1]["distanceKm"] == 7.5)
     assert(r["hikes"][2]["id"] == 2 and r["hikes"][2]["name"] == "Ridge Overlook" and r["hikes"][2]["wasSunny"] == false)
-    assert(r["hikes"][3]["id"] == 3 and r["hikes"][3]["name"] == "Wildflower Loop" and r["hikes"][3]["companion"] == "sam")
+    assert(r["hikes"][3]["id"] == 3 and r["hikes"][3]["name"] == "Wildflower Loop" and
+        r["hikes"][3]["companion"] == "sam")
 end)
 
 -- Appendix A: Examples (Informative) - Users tabular example
@@ -673,8 +682,8 @@ section("Indentation")
 -- Encoders MUST use consistent spaces per level (default 2)
 -- Configurable indent size
 test("Custom indent size", function()
-    local result = toon.encode({nested = {val = 1}}, {indent = 4})
-    assert(result:find("nested:") and result:find("    val: 1"))
+    local result = toon.encode({ nested = { val = 1 } }, { indent = 4 })
+    assert(result ~= nil and result:find("nested:") and result:find("    val: 1"))
 end)
 
 section("Error Cases")
@@ -705,15 +714,15 @@ test("List item with tabular array as first field", function()
         items = {
             {
                 users = {
-                    {id = 1, name = "Ada"},
-                    {id = 2, name = "Bob"}
+                    { id = 1, name = "Ada" },
+                    { id = 2, name = "Bob" }
                 },
                 status = "active"
             }
         }
     }
     local result = toon.encode(data)
-    assert(result:find("items%[1%]:") and result:find("users") and result:find("status"))
+    assert(result ~= nil and result:find("items%[1%]:") and result:find("users") and result:find("status"))
 end)
 
 -- Section 10: Objects as List Items
@@ -721,12 +730,12 @@ end)
 test("List item with first field on hyphen line", function()
     local data = {
         items = {
-            {id = 1, name = "First"},
-            {id = 2, name = "Second", extra = true}
+            { id = 1, name = "First" },
+            { id = 2, name = "Second", extra = true }
         }
     }
     local result = toon.encode(data)
-    assert(result:find("items%[2%]:") and (result:find("  - id: 1") or result:find("  - name: First")))
+    assert(result ~= nil and result:find("items%[2%]:") and (result:find("  - id: 1") or result:find("  - name: First")))
 end)
 
 -- Section 9.4: Expanded List Items - Nested object as first field
@@ -737,15 +746,15 @@ test("List item with nested object as first field", function()
         items = {
             {
                 users = {
-                    {id = 1, name = "Ada"},
-                    {id = 2, name = "Bob"}
+                    { id = 1, name = "Ada" },
+                    { id = 2, name = "Bob" }
                 },
                 status = "active"
             }
         }
     }
     local result = toon.encode(data)
-    assert(result:find("items%[1%]:") and result:find("users") and result:find("status"))
+    assert(result ~= nil and result:find("items%[1%]:") and result:find("users") and result:find("status"))
 end)
 
 section("Key Folding and Path Expansion")
@@ -753,38 +762,38 @@ section("Key Folding and Path Expansion")
 -- Section 13.4: Key Folding and Path Expansion
 -- Safe mode folding collapses single-key object chains
 test("Key folding basic", function()
-    local data = {a = {b = {c = 1}}}
-    local result = toon.encode(data, {keyFolding = "safe"})
+    local data = { a = { b = { c = 1 } } }
+    local result = toon.encode(data, { keyFolding = "safe" })
     assert(result == "a.b.c: 1")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
 -- Folding works with inline arrays
 test("Key folding with inline array", function()
-    local data = {data = {meta = {items = {"x", "y"}}}}
-    local result = toon.encode(data, {keyFolding = "safe"})
+    local data = { data = { meta = { items = { "x", "y" } } } }
+    local result = toon.encode(data, { keyFolding = "safe" })
     assert(result == "data.meta.items: [2]: x,y")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
 -- Folding works with tabular arrays
 test("Key folding with tabular array", function()
-    local data = {a = {b = {items = {{id = 1, name = "A"}, {id = 2, name = "B"}}}}}
-    local result = toon.encode(data, {keyFolding = "safe"})
+    local data = { a = { b = { items = { { id = 1, name = "A" }, { id = 2, name = "B" } } } } }
+    local result = toon.encode(data, { keyFolding = "safe" })
     assert(result == "a.b.items: [2]{id,name}:\n  1,A\n  2,B")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
 -- Safe mode expansion splits dotted keys into nested objects
 test("Path expansion basic", function()
-    local r = toon.decode("data.meta.items[2]: a,b", {pathExpansion = true})
+    local r = toon.decode("data.meta.items[2]: a,b", { pathExpansion = true })
     assert(r["data"]["meta"]["items"][1] == "a" and r["data"]["meta"]["items"][2] == "b")
 end)
 
 -- Section 13.4: Key Folding and Path Expansion
 -- Deep merge semantics for multiple expanded keys
 test("Path expansion deep merge", function()
-    local r = toon.decode("a.b.c: 1\na.b.d: 2\na.e: 3", {pathExpansion = true})
+    local r = toon.decode("a.b.c: 1\na.b.d: 2\na.e: 3", { pathExpansion = true })
     assert(r["a"]["b"]["c"] == 1 and r["a"]["b"]["d"] == 2 and r["a"]["e"] == 3)
 end)
 
@@ -1169,31 +1178,31 @@ section("Key Encoding Edge Cases")
 -- Section 7.3: Key Encoding
 -- Key with multiple dots
 test("Key with multiple dots", function()
-    assert(toon.encode({["a.b.c.d"] = "value"}) == '"a.b.c.d": value')
+    assert(toon.encode({ ["a.b.c.d"] = "value" }) == '"a.b.c.d": value')
 end)
 
 -- Section 7.3: Key Encoding
 -- Key with underscore and digits
 test("Key with underscore and digits", function()
-    assert(toon.encode({user_123 = "value"}):find("^user_123:"))
+    assert(toon.encode({ user_123 = "value" }):find("^user_123:"))
 end)
 
 -- Section 7.3: Key Encoding
 -- Key starting with underscore
 test("Key starting with underscore", function()
-    assert(toon.encode({_private = "value"}):find("^_private:"))
+    assert(toon.encode({ _private = "value" }):find("^_private:"))
 end)
 
 -- Section 7.3: Key Encoding
 -- Key with only underscores
 test("Key with only underscores", function()
-    assert(toon.encode({___ = "value"}):find("^___:"))
+    assert(toon.encode({ ___ = "value" }):find("^___:"))
 end)
 
 -- Section 7.3: Key Encoding
 -- Key with unicode characters (quoted)
 test("Key with unicode characters quoted", function()
-    assert(toon.encode({["你好"] = "value"}) == '"你好": value')
+    assert(toon.encode({ ["你好"] = "value" }) == '"你好": value')
 end)
 
 -- Section 7.4: Decoding Rules for Strings and Keys
@@ -1208,20 +1217,21 @@ section("Number Edge Cases")
 -- Section 2: Data Model - Numbers
 -- Very small decimal (uses scientific notation)
 test("Very small decimal number", function()
-    local r = toon.encode({num = 0.000001})
+    local r = toon.encode({ num = 0.000001 })
+    assert(r ~= nil)
     assert(r:find("1e%-06") or r:find("0.000001"))
 end)
 
 -- Section 2: Data Model - Numbers
 -- Negative decimal
 test("Negative decimal number", function()
-    assert(toon.encode({num = -123.456}) == "num: -123.456")
+    assert(toon.encode({ num = -123.456 }) == "num: -123.456")
 end)
 
 -- Section 2: Data Model - Numbers
 -- Number with many decimal places
 test("Number with many decimal places", function()
-    assert(toon.encode({num = 3.14159265359}) == "num: 3.14159265359")
+    assert(toon.encode({ num = 3.14159265359 }) == "num: 3.14159265359")
 end)
 
 -- Section 4: Decoding Interpretation - Numeric parsing
@@ -1257,38 +1267,38 @@ section("String Edge Cases")
 -- Section 7: String Encoding and Decoding
 -- Empty string
 test("Empty string handling", function()
-    assert(toon.encode({empty = ""}) == 'empty: ""')
+    assert(toon.encode({ empty = "" }) == 'empty: ""')
 end)
 
 -- Section 7: String Encoding and Decoding
 -- String with only spaces - needs quotes due to whitespace
 test("String with only spaces", function()
-    assert(toon.encode({spaces = "   "}) == 'spaces: "   "')
+    assert(toon.encode({ spaces = "   " }) == 'spaces: "   "')
 end)
 
 -- Section 7: String Encoding and Decoding
 -- String with only digits - needs quotes to prevent number interpretation
 test("String with only digits", function()
-    assert(toon.encode({numstr = "12345"}) == 'numstr: "12345"')
+    assert(toon.encode({ numstr = "12345" }) == 'numstr: "12345"')
 end)
 
 -- Section 7: String Encoding and Decoding
 -- String with only letters
 test("String with only letters", function()
-    assert(toon.encode({alpha = "hello"}) == "alpha: hello")
+    assert(toon.encode({ alpha = "hello" }) == "alpha: hello")
 end)
 
 -- Section 7: String Encoding and Decoding
 -- String matching number pattern - needs quotes to prevent number interpretation
 test("String matching number pattern", function()
-    assert(toon.encode({num = "-123.45e-6"}) == 'num: "-123.45e-6"')
+    assert(toon.encode({ num = "-123.45e-6" }) == 'num: "-123.45e-6"')
 end)
 
 -- Section 7: String Encoding and Decoding
 -- Long string
 test("Long string handling", function()
     local long = string.rep("a", 1000)
-    assert(toon.encode({long = long}) == "long: " .. long)
+    assert(toon.encode({ long = long }) == "long: " .. long)
 end)
 
 -- Section 7: String Encoding and Decoding
