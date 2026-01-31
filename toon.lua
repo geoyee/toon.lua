@@ -1,7 +1,7 @@
 -- toon.lua - TOON (Typed Object Notation) parser for Lua
 -- https://toonformat.dev/
 
-local toon = {version = "0.1.0"}
+local toon = { version = "0.1.0" }
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -40,12 +40,12 @@ end
 -- @return (table) Array of split segments.
 local function splitDelim(s, d)
     if not s or s == "" then return {} end
-    
+
     local result = {}
     local current = ""
     local inQuote = false
     local len = #s
-    
+
     for i = 1, len do
         local c = s:sub(i, i)
         if c == '"' then
@@ -58,7 +58,7 @@ local function splitDelim(s, d)
             current = current .. c
         end
     end
-    
+
     result[#result + 1] = trim(current)
     return result
 end
@@ -70,19 +70,19 @@ end
 local function parseKeyValue(line)
     local colonPos = line:find(":")
     if not colonPos then return nil end
-    
+
     local keyPart = trim(line:sub(1, colonPos - 1))
     local valuePart = trim(line:sub(colonPos + 1))
-    
+
     if keyPart == "" then return nil end
-    
+
     local key
     if keyPart:sub(1, 1) == '"' and keyPart:sub(-1) == '"' then
         key = keyPart:sub(2, -2)
     else
         key = keyPart
     end
-    
+
     if valuePart == "" then return key, nil end
     return key, valuePart
 end
@@ -110,54 +110,59 @@ end
 -- @return (string) The escaped string.
 local function escapeString(s)
     if s == nil then return "null" end
-    
+
     local result = {}
     local len = #s
     local pos = 1
-    
+
     while pos <= len do
         local c = s:sub(pos, pos)
         local escape = nil
-        
-        if c == "\\" then escape = "\\\\"
-        elseif c == '"' then escape = '\\"'
-        elseif c == "\n" then escape = "\\n"
-        elseif c == "\r" then escape = "\\r"
-        elseif c == "\t" then escape = "\\t"
+
+        if c == "\\" then
+            escape = "\\\\"
+        elseif c == '"' then
+            escape = '\\"'
+        elseif c == "\n" then
+            escape = "\\n"
+        elseif c == "\r" then
+            escape = "\\r"
+        elseif c == "\t" then
+            escape = "\\t"
         elseif string.byte(c) <= 31 then
             escape = string.format("\\%03d", string.byte(c))
         end
-        
+
         if escape then
             result[#result + 1] = escape
         else
             result[#result + 1] = c
         end
-        
+
         pos = pos + 1
     end
-    
+
     return table.concat(result)
 end
 
 --- Unescape a TOON string to get the original value.
 -- @param s (string) The escaped string.
--- @return (string) The unescaped string.
+-- @return (string|nil) The unescaped string or nil.
 local function unescapeString(s)
     if s == nil then return nil end
-    
-    return (s:gsub("\\(%d%d%d)", function(n)
-        local val = tonumber(n)
-        if val and val <= 127 then
-            return string.char(val)
-        end
-        return "\\" .. n
-    end)
-    :gsub("\\n", "\n")
-    :gsub("\\r", "\r")
-    :gsub("\\t", "\t")
-    :gsub('\\"', '"')
-    :gsub("\\\\", "\\"))
+
+    return tostring(s:gsub("\\(%d%d%d)", function(n)
+            local val = tonumber(n)
+            if val and val <= 127 then
+                return string.char(val)
+            end
+            return "\\" .. n
+        end)
+        :gsub("\\n", "\n")
+        :gsub("\\r", "\r")
+        :gsub("\\t", "\t")
+        :gsub('\\"', '"')
+        :gsub("\\\\", "\\"))
 end
 
 -- ============================================================================
@@ -184,11 +189,11 @@ local function encodeKey(k)
     if type(k) ~= "string" or k == "" then
         return '"' .. tostring(k) .. '"'
     end
-    
+
     if k:find("[%.%s]") or not k:match("^[A-Za-z_][A-Za-z0-9_]*$") then
         return '"' .. k .. '"'
     end
-    
+
     return k
 end
 
@@ -206,20 +211,20 @@ local function formatNumber(n)
     if n ~= n or n == math.huge or n == -math.huge then
         return "null"
     end
-    
+
     if n == 0 then return "0" end
-    
+
     local s = tostring(n)
-    
+
     if s:find("^%-?0%.") then
         s = s:gsub("^(%-?)0+(%d)", "%1%2")
     end
-    
+
     if s:find("%.") then
         s = s:gsub("(%..-)0+$", "%1")
         s = s:gsub("%.$", "")
     end
-    
+
     return s
 end
 
@@ -233,20 +238,20 @@ end
 -- @return (mixed) The parsed Lua value.
 local function parseValue(tok)
     if not tok or tok == "" then return "" end
-    
+
     if tok == "null" then return nil end
     if tok == "true" then return true end
     if tok == "false" then return false end
-    
+
     if tok:sub(1, 1) == '"' and tok:sub(-1) == '"' then
         return unescapeString(tok:sub(2, -2))
     end
-    
+
     local n = tonumber(tok)
     if n and n == n and n ~= math.huge and n ~= -math.huge then
         return n
     end
-    
+
     return tok
 end
 
@@ -305,7 +310,7 @@ local function setNestedValue(t, path, value, pathParts)
     local parts = pathParts or (type(path) == "table" and path or splitPath(path))
     local current = t
     local len = #parts
-    
+
     for i = 1, len do
         local part = parts[i]
         if i == len then
@@ -336,44 +341,44 @@ local function canFoldKey(v)
     if type(v) ~= "table" then
         return false, nil, v
     end
-    
+
     if next(v) == nil then
         return false, nil, nil
     end
-    
+
     if isArray(v) then
         return false, nil, nil
     end
-    
+
     local path = ""
     local current = v
-    
+
     while true do
         local keys = {}
         for k in pairs(current) do
             keys[#keys + 1] = k
         end
-        
+
         if #keys ~= 1 then
             return false, path == "" and nil or path, current
         end
-        
+
         local key = keys[1]
         if type(key) ~= "string" then
             return false, path == "" and nil or path, current
         end
-        
+
         if key == "" or key:find("[%.%s]") or not key:match("^[A-Za-z_][A-Za-z0-9_]*$") then
             return false, path == "" and nil or path, current
         end
-        
+
         path = path == "" and key or path .. "." .. key
         local child = current[key]
-        
+
         if type(child) ~= "table" or next(child) == nil or isArray(child) then
             return true, path, child
         end
-        
+
         current = child
     end
 end
@@ -388,12 +393,12 @@ local function getNestedValue(v, path, pathParts)
     local parts = pathParts or (type(path) == "table" and path or splitPath(path))
     local current = v
     local len = #parts
-    
+
     for i = 1, len do
         if current == nil then return nil end
         current = current[parts[i]]
     end
-    
+
     return current
 end
 
@@ -413,31 +418,31 @@ local encodeObject
 -- @return (string) The encoded value.
 local function encodeValue(v, opts, delim)
     if v == nil then return "null" end
-    
+
     local tp = type(v)
-    
+
     if tp == "boolean" then
         return v and "true" or "false"
     end
-    
+
     if tp == "number" then
         return formatNumber(v)
     end
-    
+
     if tp == "string" then
         if needsQuoting(v, delim) then
             return '"' .. escapeString(v) .. '"'
         end
         return v
     end
-    
+
     if tp == "table" then
         if isArray(v) then
             return encodeArray(v, 0, opts, delim)
         end
         return encodeObject(v, 0, opts, delim)
     end
-    
+
     return "null"
 end
 
@@ -449,19 +454,19 @@ end
 -- @param lines (table) Output lines accumulator.
 local function foldValue(prefix, v, opts, delim, lines)
     local tp = type(v)
-    
+
     if tp ~= "table" or isArray(v) then
         lines[#lines + 1] = prefix .. ": " .. encodeValue(v, opts, delim)
         return
     end
-    
+
     if next(v) == nil then
         lines[#lines + 1] = prefix .. ":"
         return
     end
-    
+
     local foldable, foldedPath, leafValue = canFoldKey(v)
-    
+
     if foldable then
         lines[#lines + 1] = prefix .. "." .. foldedPath .. ": " .. encodeValue(leafValue, opts, delim)
     elseif foldedPath then
@@ -488,35 +493,35 @@ end
 -- @return (string) The encoded array.
 function encodeArray(a, lvl, opts, delim)
     if type(a) ~= "table" then return "null" end
-    
+
     local indent = string.rep(" ", (opts.indent or 2) * lvl)
     local nextIndent = string.rep(" ", (opts.indent or 2) * (lvl + 1))
     delim = delim or getDelimiter(opts)
     local count = #a
-    
+
     if count == 0 then
         return indent .. "[" .. count .. getDelimiterMark(delim) .. "]:"
     end
-    
+
     local firstElement = a[1]
-    
+
     if type(firstElement) == "table" then
         local keys = {}
         local allSame = true
         local hasNonPrimitive = false
-        
+
         for _, item in ipairs(a) do
             if type(item) ~= "table" then
                 allSame = false
                 break
             end
-            
+
             local itemKeys = {}
             for k in pairs(item) do
                 itemKeys[#itemKeys + 1] = k
             end
             table.sort(itemKeys)
-            
+
             if #keys == 0 then
                 keys = itemKeys
             else
@@ -532,7 +537,7 @@ function encodeArray(a, lvl, opts, delim)
                 end
                 if not allSame then break end
             end
-            
+
             for _, k in ipairs(keys) do
                 local vt = type(item[k])
                 if vt == "table" or vt == "function" or vt == "userdata" then
@@ -542,11 +547,11 @@ function encodeArray(a, lvl, opts, delim)
             end
             if hasNonPrimitive then break end
         end
-        
+
         if allSame and #keys > 0 and not hasNonPrimitive then
             local fieldList = table.concat(keys, delim)
-            local result = {indent .. "[" .. count .. getDelimiterMark(delim) .. "]{" .. fieldList .. "}:"}
-            
+            local result = { indent .. "[" .. count .. getDelimiterMark(delim) .. "]{" .. fieldList .. "}:" }
+
             for _, item in ipairs(a) do
                 local row = {}
                 for _, k in ipairs(keys) do
@@ -554,11 +559,11 @@ function encodeArray(a, lvl, opts, delim)
                 end
                 result[#result + 1] = nextIndent .. table.concat(row, delim)
             end
-            
+
             return table.concat(result, "\n")
         end
     end
-    
+
     local hasTable = false
     for i = 1, count do
         if type(a[i]) == "table" then
@@ -566,7 +571,7 @@ function encodeArray(a, lvl, opts, delim)
             break
         end
     end
-    
+
     if not hasTable then
         local values = {}
         for i = 1, count do
@@ -574,9 +579,9 @@ function encodeArray(a, lvl, opts, delim)
         end
         return indent .. "[" .. count .. getDelimiterMark(delim) .. "]: " .. table.concat(values, delim)
     end
-    
-    local lines = {indent .. "[" .. count .. getDelimiterMark(delim) .. "]:"}
-    
+
+    local lines = { indent .. "[" .. count .. getDelimiterMark(delim) .. "]:" }
+
     for i = 1, count do
         local item = a[i]
         if type(item) == "table" then
@@ -592,7 +597,7 @@ function encodeArray(a, lvl, opts, delim)
             lines[#lines + 1] = nextIndent .. "- " .. encodeValue(item, opts, delim)
         end
     end
-    
+
     return table.concat(lines, "\n")
 end
 
@@ -604,15 +609,15 @@ end
 -- @return (string) The encoded object.
 function encodeObject(o, lvl, opts, delim)
     if type(o) ~= "table" then return "null" end
-    
+
     local indent = string.rep(" ", (opts.indent or 2) * lvl)
     delim = delim or getDelimiter(opts)
     local lines = {}
-    
+
     for k, v in pairs(o) do
         local fk = encodeKey(k)
         local tp = type(v)
-        
+
         if tp == "table" then
             if next(v) == nil then
                 if isArray(v) then
@@ -639,7 +644,7 @@ function encodeObject(o, lvl, opts, delim)
             lines[#lines + 1] = indent .. fk .. ": " .. encodeValue(v, opts, delim)
         end
     end
-    
+
     return table.concat(lines, "\n")
 end
 
@@ -656,16 +661,16 @@ function toon.encode(data, opts)
     if type(data) ~= "table" then
         return nil, "data must be a table"
     end
-    
+
     opts = opts or {}
     local delim = getDelimiter(opts)
     local lines = {}
     local useFolding = opts.keyFolding
-    
+
     for k, v in pairs(data) do
         local fk = encodeKey(k)
         local tp = type(v)
-        
+
         if tp == "table" then
             if next(v) == nil then
                 if isArray(v) then
@@ -700,7 +705,7 @@ function toon.encode(data, opts)
             lines[#lines + 1] = fk .. ": " .. encodeValue(v, opts, delim)
         end
     end
-    
+
     return table.concat(lines, "\n")
 end
 
@@ -716,13 +721,13 @@ end
 local function parseArrayHeader(line)
     local openBracket = line:find("%[")
     if not openBracket then return nil end
-    
+
     local closeBracket = line:find("]", openBracket)
     if not closeBracket then return nil end
-    
+
     local inside = line:sub(openBracket + 1, closeBracket - 1)
     local count, delimiter
-    
+
     local pipePos = inside:find("|")
     if pipePos then
         count = tonumber(inside:sub(1, pipePos - 1))
@@ -739,12 +744,12 @@ local function parseArrayHeader(line)
             delimiter = ","
         end
     end
-    
+
     if not count then return nil end
-    
+
     local fields = nil
     local rest = line:sub(closeBracket + 1)
-    
+
     if rest:sub(1, 1) == "{" then
         local closeBrace = rest:find("}")
         if closeBrace then
@@ -760,12 +765,12 @@ local function parseArrayHeader(line)
             rest = rest:sub(closeBrace + 1)
         end
     end
-    
+
     if rest:sub(1, 1) ~= ":" then return nil end
-    
+
     local inlineValue = trim(rest:sub(2))
     if inlineValue == "" then inlineValue = nil end
-    
+
     return {
         count = count,
         delimiter = delimiter,
@@ -779,11 +784,11 @@ end
 -- @return (mixed) The parsed list item.
 local function parseListItem(line)
     if not line:find("^%s*- ") then return nil end
-    
+
     local content = trim(line:match("^%s*-(.*)$") or "")
-    
+
     if content == "" then return {} end
-    
+
     local header = parseArrayHeader(content)
     if header then
         if header.inlineValue then
@@ -796,10 +801,10 @@ local function parseListItem(line)
         end
         return {}
     end
-    
+
     local k, v = parseKeyValue(content)
-    if k then return {[k] = parseValue(v)} end
-    
+    if k then return { [k] = parseValue(v) } end
+
     return parseValue(content)
 end
 
@@ -811,11 +816,11 @@ end
 local function parseTabularRow(line, fields, delimiter)
     local values = splitDelim(line, delimiter)
     local result = {}
-    
+
     for i, field in ipairs(fields) do
         result[field] = parseValue(values[i] or "")
     end
-    
+
     return result
 end
 
@@ -835,35 +840,39 @@ local function decodeObject(lines, startDepth, opts)
     local result = {}
     local i = 1
     local len = #lines
-    
+
     while i <= len do
         local line = lines[i]
-        
+
         if line == "" then
             i = i + 1
             goto continue
         end
-        
+
         local depth = countSpaces(line)
         local content = line:sub(depth + 1)
-        
+
         if depth < startDepth then
             return result
         end
-        
+
         if content:find("^%s*- ") then
             if depth < startDepth then return result end
             result[#result + 1] = parseListItem(content)
             i = i + 1
             goto continue
         end
-        
+
         local header = parseArrayHeader(content)
         if header then
             local keyPart = content:sub(1, content:find("%[") - 1)
             local key = decodeKey(trim(keyPart))
+            if key == nil then
+                goto continue
+            end
+
             local pathParts = key:find("%.") and splitPath(key) or nil
-            
+
             if header.fields then
                 local j = i + 1
                 local rows = {}
@@ -871,26 +880,26 @@ local function decodeObject(lines, startDepth, opts)
                     rows[#rows + 1] = parseTabularRow(lines[j], header.fields, header.delimiter)
                     j = j + 1
                 end
-                
+
                 if opts.pathExpansion and pathParts then
                     setNestedValue(result, key, rows, pathParts)
                 else
                     result[key] = rows
                 end
-                
+
                 i = j
             elseif header.inlineValue then
                 local values = {}
                 for v in header.inlineValue:gmatch("[^" .. header.delimiter .. "]+") do
                     values[#values + 1] = parseValue(trim(v))
                 end
-                
+
                 if opts.pathExpansion and pathParts then
                     setNestedValue(result, key, values, pathParts)
                 else
                     result[key] = values
                 end
-                
+
                 i = i + 1
             else
                 local j = i + 1
@@ -901,13 +910,13 @@ local function decodeObject(lines, startDepth, opts)
                     end
                     j = j + 1
                 end
-                
+
                 if opts.pathExpansion and pathParts then
                     setNestedValue(result, key, items, pathParts)
                 else
                     result[key] = items
                 end
-                
+
                 i = j
             end
         else
@@ -917,14 +926,14 @@ local function decodeObject(lines, startDepth, opts)
                     local j = i + 1
                     local nestedLines = {}
                     local hasContent = false
-                    
+
                     while j <= len and lines[j] ~= "" do
                         if countSpaces(lines[j]) <= depth then break end
                         hasContent = true
                         nestedLines[#nestedLines + 1] = lines[j]
                         j = j + 1
                     end
-                    
+
                     if hasContent then
                         local nested = decodeObject(nestedLines, depth, opts)
                         local pathParts = k:find("%.") and splitPath(k) or nil
@@ -942,27 +951,27 @@ local function decodeObject(lines, startDepth, opts)
                             result[k] = {}
                         end
                     end
-                    
+
                     i = j
                 else
                     local pathParts = k:find("%.") and splitPath(k) or nil
-                    
+
                     if opts.pathExpansion and pathParts then
                         setNestedValue(result, k, parseValue(v), pathParts)
                     else
                         result[k] = parseValue(v)
                     end
-                    
+
                     i = i + 1
                 end
             else
                 i = i + 1
             end
         end
-        
+
         ::continue::
     end
-    
+
     return result
 end
 
@@ -972,13 +981,13 @@ end
 local function parseLines(text)
     text = text or ""
     local lines = {}
-    
+
     for line in (text .. "\n"):gmatch("([^\n]*)\n") do
         if line ~= "" or #lines > 0 then
             lines[#lines + 1] = line
         end
     end
-    
+
     return lines
 end
 
@@ -994,25 +1003,25 @@ end
 function toon.decode(text, opts)
     text = text or ""
     opts = opts or {}
-    
+
     local lines = parseLines(text)
     if #lines == 0 then return {} end
-    
+
     local nonEmptyLines = {}
     for _, line in ipairs(lines) do
         if line ~= "" then
             nonEmptyLines[#nonEmptyLines + 1] = line
         end
     end
-    
+
     if #nonEmptyLines == 0 then return {} end
-    
+
     local firstLine = nonEmptyLines[1]
     local header = parseArrayHeader(firstLine)
-    
+
     if header and not firstLine:find("^[A-Za-z_]") and not firstLine:find('^"') then
         local result = {}
-        
+
         if header.inlineValue then
             for v in header.inlineValue:gmatch("[^" .. header.delimiter .. "]+") do
                 result[#result + 1] = parseValue(trim(v))
@@ -1023,10 +1032,10 @@ function toon.decode(text, opts)
                 result[#result + 1] = parseTabularRow(nonEmptyLines[i], header.fields, header.delimiter)
             end
         end
-        
+
         return result
     end
-    
+
     if #nonEmptyLines == 1 then
         local line = nonEmptyLines[1]
         if not line:find(":") then
@@ -1034,7 +1043,7 @@ function toon.decode(text, opts)
             if value ~= nil then return value end
         end
     end
-    
+
     return decodeObject(lines, 0, opts)
 end
 

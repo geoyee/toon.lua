@@ -3,39 +3,83 @@ local toon = require("toon")
 
 print("Version of json.lua: " .. json._version)
 print("Version of toon.lua: " .. toon.version)
-print("\n")
+
+-- ============================================================================
+-- UTILS
+-- ============================================================================
+
+--- Reads the entire content of a file.
+-- @param filePath (string) The path to the file to read.
+-- @return (string) The content of the file.
+local function readFile(filePath)
+    local file, err = io.open(filePath, "r")
+    if not file then
+        io.stderr:write("Error: Could not open file '" .. tostring(filePath) .. "': " .. tostring(err) .. "\n")
+        return ""
+    end
+    local content = file:read("*a")
+    file:close()
+    return content
+end
+
+--- Trim whitespace from both ends of a string.
+-- @param s (string) The string to trim.
+-- @return (string) The trimmed string.
+local function trim(s)
+    return s and s:match("^%s*(.-)%s*$") or ""
+end
+
+--- Convert json string to toon string
+-- @param jsonStr (string) json string
+-- @return (string) toon string
+local function json2Toon(jsonStr)
+    return toon.encode(json.decode(jsonStr))
+end
+
+--- Convert toon string to json string
+-- @param toonStr (string) toon string
+-- @return (string) json string
+local function toon2Json(toonStr)
+    return json.encode(toon.decode(toonStr))
+end
+
+-- Some paired json and toon files provided by `spec/examples/conversions`
+local exampleFilsDir = "spec/examples/conversions/";
+local files = {
+    jsonFiles = {
+        exampleFilsDir .. "api-response.json",
+        exampleFilsDir .. "config.json",
+        exampleFilsDir .. "users.json"
+    },
+    toonFiles = {
+        exampleFilsDir .. "api-response.toon",
+        exampleFilsDir .. "config.toon",
+        exampleFilsDir .. "users.toon"
+    }
+}
 
 -- ============================================================================
 -- JSON TO TOON
 -- ============================================================================
 
-local jsonStrInput = [[
-{
-  "name": "张三",
-  "age": 30,
-  "address": {
-    "city": "北京",
-    "district": "朝阳区"
-  },
-  "hobbies": ["阅读", "游泳", "编程"]
-}
-]]
-local toonStrOutput = toon.encode(json.decode(jsonStrInput))
-print("Input json: \n" .. jsonStrInput)
-print("Output toon: \n" .. toonStrOutput)
-print("\n")
+for _, path in ipairs(files.jsonFiles) do
+    local jsonIStr = trim(readFile(path))
+    local toonOStr = trim(json2Toon(jsonIStr))
+    print(string.rep("=", 60))
+    print("Input json: \n" .. jsonIStr)
+    print()
+    print("Output toon: \n" .. toonOStr)
+end
 
 -- ============================================================================
 -- TOON TO JSON
 -- ============================================================================
 
-local toonStrInput = [[
-employees[3]{id, name, department, salary}:
-  1, 张三, 技术部, 8000
-  2, 李四, 市场部, 7500
-  3, 王五, 人事部, 6800
-]]
-local jsonStrOutput = json.encode(toon.decode(toonStrInput))
-print("Input toon: \n" .. toonStrInput)
-print("Output json: \n" .. jsonStrOutput)
-
+for _, path in ipairs(files.toonFiles) do
+    local toonIStr = trim(readFile(path))
+    local jsonOStr = trim(toon2Json(toonIStr))
+    print(string.rep("=", 60))
+    print("Input toon: \n" .. toonIStr)
+    print()
+    print("Output json: \n" .. jsonOStr)
+end
