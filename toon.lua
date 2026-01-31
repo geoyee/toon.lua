@@ -1,4 +1,4 @@
--- toon.lua - TOON (Typed Object Notation) parser for Lua
+-- toon.lua - TOON (Token-Oriented Object Notation) parser for Lua
 -- https://toonformat.dev/
 
 local toon = { version = "0.1.0" }
@@ -147,11 +147,11 @@ end
 
 --- Unescape a TOON string to get the original value.
 -- @param s (string) The escaped string.
--- @return (string|nil) The unescaped string or nil.
+-- @return (string) The unescaped string or nil.
 local function unescapeString(s)
-    if s == nil then return nil end
+    if s == nil then return "" end
 
-    return tostring(s:gsub("\\(%d%d%d)", function(n)
+    return (s:gsub("\\(%d%d%d)", function(n)
             local val = tonumber(n)
             if val and val <= 127 then
                 return string.char(val)
@@ -768,8 +768,8 @@ local function parseArrayHeader(line)
 
     if rest:sub(1, 1) ~= ":" then return nil end
 
-    local inlineValue = trim(rest:sub(2))
-    if inlineValue == "" then inlineValue = nil end
+    local trimmed = trim(rest:sub(2))
+    local inlineValue = trimmed ~= "" and trimmed or nil
 
     return {
         count = count,
@@ -867,10 +867,6 @@ local function decodeObject(lines, startDepth, opts)
         if header then
             local keyPart = content:sub(1, content:find("%[") - 1)
             local key = decodeKey(trim(keyPart))
-            if key == nil then
-                goto continue
-            end
-
             local pathParts = key:find("%.") and splitPath(key) or nil
 
             if header.fields then
