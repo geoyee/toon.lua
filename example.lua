@@ -13,7 +13,8 @@ print("Version of toon.lua: " .. toon.version)
 -- @return (string) The content of the file.
 local function readFile(filePath)
     local file, err = io.open(filePath, "r")
-    if not file or err then
+    if not file then
+        io.stderr:write("Error: Could not open file '" .. tostring(filePath) .. "': " .. tostring(err) .. "\n")
         return ""
     end
     local content = file:read("*a")
@@ -61,7 +62,7 @@ local files = {
 -- JSON TO TOON
 -- ============================================================================
 
-for _, path in pairs(files.jsonFiles) do
+for _, path in ipairs(files.jsonFiles) do
     local jsonIStr = trim(readFile(path))
     local toonOStr = trim(json2Toon(jsonIStr))
     print(string.rep("=", 60))
@@ -74,7 +75,7 @@ end
 -- TOON TO JSON
 -- ============================================================================
 
-for _, path in pairs(files.toonFiles) do
+for _, path in ipairs(files.toonFiles) do
     local toonIStr = trim(readFile(path))
     local jsonOStr = trim(toon2Json(toonIStr))
     print(string.rep("=", 60))
